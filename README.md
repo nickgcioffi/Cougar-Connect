@@ -10,7 +10,7 @@ BYU events are scattered across campus organizations, locations, and communicati
 
 The Step 1 ERD models User, Interest, Events, and Organization, with join tables for user interests, event interests, saved user events, and event co-hosts.
 
-The team is implementing a Supabase backend to persist all information entered on the Create Profile page: full name, university, study level, graduation month, primary interest, bio, and optional profile photo. Full name corresponds to FirstName and LastName; university, graduation month, bio, and photo correspond to UniName, GradDate, Biography, and PhotoURL. Study level and primary interest also need to be represented in the backend, even though they are not fields in the ERD's User table.
+The team is implementing a Supabase backend to persist all information entered on the Create Profile page: full name, university, study level, graduation month, primary interest, bio, and optional profile photo. Full name corresponds to FirstName and LastName; university, graduation month, bio, and photo correspond to UniName, GradDate, Biography, and PhotoURL. Study level and primary interest correspond to StudyLevel and PrimaryInterest in the ERD's User table.
 
 The code in this checkout currently stores the profile in localStorage, with one `name` value and a photo data URL. UserID, created_at, separate first/last names, and Supabase persistence are not yet implemented here.
 
