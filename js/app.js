@@ -9,87 +9,33 @@ const $ = (s) => document.querySelector(s),
     "Research",
     "Social & community",
   ];
-const seed = [
-  {
-    id: 1,
-    name: "Meet your next opportunity",
-    org: "Business Career Center",
-    genre: "Career & networking",
-    type: "Professional",
-    location: "Tanner Building",
-    day: 29,
-    time: "17:00",
-    icon: "↗",
-    desc: "Connect with alumni and explore internships at an informal career networking night. Bring your questions and a little curiosity.",
-  },
-  {
-    id: 2,
-    name: "Build night: ideas into action",
-    org: "Association for Information Systems",
-    genre: "Technology",
-    type: "Professional",
-    location: "Tanner Building",
-    day: 30,
-    time: "18:00",
-    icon: "⌘",
-    desc: "Team up with other students for a hands-on project workshop. All experience levels are welcome.",
-  },
-  {
-    id: 3,
-    name: "A little service. A big difference.",
-    org: "Y-Serve",
-    genre: "Service",
-    type: "Social",
-    location: "Wilkinson Student Center",
-    day: 28,
-    time: "16:00",
-    icon: "♡",
-    desc: "Spend an afternoon assembling community care kits and meeting fellow student volunteers.",
-  },
-  {
-    id: 4,
-    name: "Founders & fresh ideas",
-    org: "Entrepreneurship Club",
-    genre: "Entrepreneurship",
-    type: "Professional",
-    location: "Tanner Building",
-    day: 30,
-    time: "12:00",
-    icon: "✧",
-    desc: "Hear student founders share what they learned building their first ventures.",
-  },
-  {
-    id: 5,
-    name: "An evening of live music",
-    org: "Student Activities",
-    genre: "Arts & culture",
-    type: "Social",
-    location: "Brigham Square",
-    day: 29,
-    time: "19:00",
-    icon: "♫",
-    desc: "Take a study break with student musicians and friends at an outdoor concert.",
-  },
-].map((e) => ({ ...e, date: `2026-09-${e.day}` }));
-let state;
-try {
-  state = JSON.parse(localStorage.getItem("cougar-demo"));
-} catch {}
-state = state || {
-  profile: null,
-  interests: [],
-  saved: [],
-  launch: "Home",
-  events: seed,
-};
-state.events = state.events || seed;
-let tab =
-    state.profile && state.interests.length >= 3 ? state.launch : "Profile",
-  chosen = [...state.interests],
-  month = 8,
-  year = 2026,
-  filters = {},
-  query = "";
+let state = { profile: null, interests: [], saved: [], launch: "Home", events: [], admins: [] };
+let tab = "Auth", chosen = [], month = new Date().getMonth(), year = new Date().getFullYear(), filters = {}, query = "";
+let supabase, session, recovery = false, busy = false;
+async function api(path, body) {
+  const { data } = await supabase.auth.getSession();
+  const response = await fetch('/api/' + path, {
+    method: body ? 'POST' : 'GET',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${data.session?.access_token || ''}` },
+    ...(body ? { body: JSON.stringify(body) } : {})
+  });
+  const result = await response.json();
+  if (!response.ok) throw new Error(result.error || 'Request failed');
+  return result;
+}
+async function loadState() {
+  state = await api('state');
+  interests.splice(0, interests.length, ...state.categories);
+  chosen = [...state.interests];
+}
+async function mutate(action, payload, after) {
+  if (busy) return;
+  busy = true;
+  document.querySelectorAll('button').forEach(b => b.disabled = true);
+  try { await api('action', { action, payload }); await loadState(); if (after) after(); render(); }
+  catch (error) { render(); toast(error.message); }
+  finally { busy = false; }
+}
 const esc = (s) =>
   String(s ?? "").replace(
     /[&<>"']/g,
@@ -98,13 +44,6 @@ const esc = (s) =>
         c
       ],
   );
-const persist = () => {
-  try {
-    localStorage.setItem("cougar-demo", JSON.stringify(state));
-  } catch {
-    toast("Your browser could not save this demo.");
-  }
-};
 const toast = (t) => {
   $("#toast").textContent = t;
   $("#toast").style.display = "block";
@@ -137,7 +76,7 @@ function setup(content, step) {
   return `<div class="setup"><aside class="intro"><div><div class="eyebrow">YOUR CAMPUS. YOUR NEXT CHAPTER.</div><h1>Good things<br>happen when<br>you show up.</h1><p>Discover the people, experiences, and opportunities that make your time at BYU count.</p></div><div class="introFoot">A connection today.<br>A possibility for tomorrow.</div></aside><section class="formside"><div class="steps"><span class="on"></span><span class="${step === 2 ? "on" : ""}"></span></div>${content}</section></div>`;
 }
 function render() {
-  $("#nav").innerHTML = ["Profile", "Interests"].includes(tab)
+  $("#nav").innerHTML = ["Profile", "Interests", "Auth", "Loading", "Error"].includes(tab)
     ? ""
     : ["Home", "Calendar", "Search", "Feed", "Settings"]
         .map(
@@ -153,9 +92,12 @@ function render() {
         .slice(0, 2)
     : "Y";
   let html = "";
+  if (tab === "Auth") html = setup(`<h2>${recovery ? 'Choose a new password' : 'Welcome to Cougar Connect'}</h2><form id="authForm">${recovery ? '' : '<label>Email<input name="email" type="email" autocomplete="email" required></label>'}<label>Password<input name="password" type="password" autocomplete="${recovery ? 'new-password' : 'current-password'}" minlength="8" required></label><button class="primary wide" name="action" value="login">${recovery ? 'Update password' : 'Sign in'}</button>${recovery ? '' : '<button class="wide" name="action" value="signup">Create account</button>'}</form>${recovery ? '' : '<button id="resetPassword">Forgot password</button>'}`, 1);
+  if (tab === "Loading") html = '<div class="panel empty">Loading your account…</div>';
+  if (tab === "Error") html = '<div class="panel empty"><h2>Unable to load your account</h2><p>Check your connection and make sure the database migration has been applied.</p><button id="retry">Try again</button><button id="signout">Sign out</button></div>';
   if (tab === "Profile")
     html = setup(
-      `<div class="eyebrow">STEP 01 / 02</div><h2 style="margin-top:8px">Make yourself at home.</h2><p>Start with a little about you.</p><form id="profileForm"><div class="upload"><img class="avatar" id="avatarPreview" alt="Profile photo" hidden><span class="avatar" id="avatarPlaceholder">＋</span><label>Profile photo <span class="subtle">(optional)</span><input id="photo" type="file" accept="image/*"></label></div><label>Full name<input name="name" placeholder="e.g. Jordan Miller" required maxlength="80" value="${esc(state.profile?.name || "")}"></label><label>University<select name="uni">${options(["Brigham Young University", "BYU–Idaho", "BYU–Hawaii", "Other"], state.profile?.uni)}</select></label><div class="row"><label>Study level<select name="level">${options(["Undergraduate", "Graduate"], state.profile?.level)}</select></label><label>Graduation date<input name="graduation" type="month" required value="${esc(state.profile?.graduation || "2027-04")}"></label></div><label>Primary interest<select name="interest">${options(interests, state.profile?.interest)}</select></label><label>Bio <span class="subtle">(optional)</span><textarea name="bio" placeholder="What are you hoping to get involved in?" maxlength="400">${esc(state.profile?.bio || "")}</textarea></label><button class="primary wide">Create profile →</button><p class="subtle" style="margin:12px 0 0">Coursework demo · Profile stays in this browser. No account is created.</p></form>`,
+      `<div class="eyebrow">STEP 01 / 02</div><h2 style="margin-top:8px">Make yourself at home.</h2><p>Start with a little about you.</p><form id="profileForm"><div class="upload"><img class="avatar" id="avatarPreview" alt="Profile photo" hidden><span class="avatar" id="avatarPlaceholder">＋</span><label>Profile photo <span class="subtle">(optional)</span><input id="photo" type="file" accept="image/*"></label></div><label>Full name<input name="name" placeholder="e.g. Jordan Miller" required maxlength="80" value="${esc(state.profile?.name || "")}"></label><label>University<select name="uni">${options(["Brigham Young University", "BYU–Idaho", "BYU–Hawaii", "Other"], state.profile?.uni)}</select></label><div class="row"><label>Study level<select name="level">${options(["Undergraduate", "Graduate"], state.profile?.level)}</select></label><label>Graduation date<input name="graduation" type="month" required value="${esc(state.profile?.graduation || "2027-04")}"></label></div><label>Primary interest<select name="interest">${options(interests, state.profile?.interest)}</select></label><label>Bio <span class="subtle">(optional)</span><textarea name="bio" placeholder="What are you hoping to get involved in?" maxlength="400">${esc(state.profile?.bio || "")}</textarea></label><button class="primary wide">Create profile →</button><p class="subtle" style="margin:12px 0 0">Your profile is saved to your account.</p></form>`,
       1,
     );
   if (tab === "Interests")
@@ -164,11 +106,11 @@ function render() {
       2,
     );
   if (tab === "Home")
-    html = `<div class="welcome topline"><div><div class="eyebrow">MAKE ROOM FOR WHAT’S NEXT</div><h1>Hey, ${esc(state.profile.name.split(" ")[0])}.</h1><p>Your next connection could be just around campus.</p></div><span class="tag">FALL 2026</span></div><div class="banner"><div><div class="eyebrow" style="color:#a6c6ff">A LITTLE EXPLORING GOES A LONG WAY</div><h2>Find something worth showing up for.</h2><p>Build your résumé. Meet your people. Try something new.</p></div><button data-tab="Calendar">Explore calendar ↗</button></div><div class="topline"><h2>On your radar <span class="subtle">${state.saved.length} saved</span></h2><button data-tab="Calendar">View calendar</button></div>${cards(state.events.filter((e) => state.saved.includes(e.id)))}<h2>Picked for your interests</h2>${cards(state.events.filter((e) => state.interests.includes(e.genre)))}<p class="subtle">All events, organizations’ event details, and attendee examples are fictional sample data.</p>`;
+    html = `<div class="welcome topline"><div><div class="eyebrow">MAKE ROOM FOR WHAT’S NEXT</div><h1>Hey, ${esc(state.profile.name.split(" ")[0])}.</h1><p>Your next connection could be just around campus.</p></div><span class="tag">${new Date().getFullYear()}</span></div><div class="banner"><div><div class="eyebrow" style="color:#a6c6ff">A LITTLE EXPLORING GOES A LONG WAY</div><h2>Find something worth showing up for.</h2><p>Build your résumé. Meet your people. Try something new.</p></div><button data-tab="Calendar">Explore calendar ↗</button></div><div class="topline"><h2>On your radar <span class="subtle">${state.saved.length} saved</span></h2><button data-tab="Calendar">View calendar</button></div>${cards(state.events.filter((e) => state.saved.includes(e.id)))}<h2>Picked for your interests</h2>${cards(state.events.filter((e) => e.genres.some(g => state.interests.includes(g))))}`;
   if (tab === "Calendar") {
     let filtered = state.events.filter(
       (e) =>
-        (!filters.genre || e.genre === filters.genre) &&
+        (!filters.genre || e.genres.includes(filters.genre)) &&
         (!filters.type || e.type === filters.type) &&
         (!filters.location || e.location === filters.location) &&
         (!filters.org || e.org === filters.org) &&
@@ -203,7 +145,7 @@ function render() {
       )}<button id="clearFilters">Reset filters</button></div><div class="panel"><div class="topline"><h2>${new Date(year, month).toLocaleDateString("en-US", { month: "long", year: "numeric" })}</h2><div><button id="prev" aria-label="Previous month">‹</button> <button id="next" aria-label="Next month">›</button></div></div><div class="calendar">${["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"].map((d) => `<div class="day head">${d}</div>`).join("")}${'<div class="day"></div>'.repeat(offset)}${Array.from(
       { length: days },
       (_, i) =>
-        `<div class="day ${year === 2026 && month === 8 && i === 27 ? "today" : ""}">${i + 1}${filtered
+        `<div class="day ${year === new Date().getFullYear() && month === new Date().getMonth() && i + 1 === new Date().getDate() ? "today" : ""}">${i + 1}${filtered
           .filter(
             (e) =>
               e.date ===
@@ -223,9 +165,9 @@ function render() {
   if (tab === "Feed")
     html = `<div class="eyebrow">RECOMMENDED FEED</div><h1>A feed that gets you.</h1><div class="panel empty"><span class="tag">WIP</span><h2 style="margin-top:20px">Good things are on the way.</h2><p>Your personalized event feed is a work in progress.<br>Explore events picked for your interests on Home.</p><button class="primary" data-tab="Home">Back to Home</button></div>`;
   if (tab === "Settings")
-    html = `<div class="settings"><div class="eyebrow">MAKE IT YOURS</div><h1>Settings</h1><div class="panel"><h2>${esc(state.profile.name)}</h2><p>${esc(state.profile.uni)} · ${esc(state.profile.level)}</p><p>${esc(state.profile.bio)}</p><button data-tab="Profile">Edit profile</button> <button data-tab="Interests">Edit interests</button></div><div class="panel"><h2>App preferences</h2><label class="setting">Open at launch<select id="launch">${options(["Home", "Calendar", "Search", "Feed", "Settings"], state.launch)}</select></label><p class="subtle">Preferences and saved events are stored on this device.</p></div><div class="panel"><h2>Club administration</h2><p>Try the event creation dashboard with sample data.</p><button data-tab="Admin">Open demo dashboard →</button></div><div class="panel"><h2>Account</h2><p>This prototype has no server authentication or email delivery.</p><button id="forgot">Forgot password</button></div></div>`;
-  if (tab === "Admin")
-    html = `<div class="topline"><h1>Club dashboard</h1><button data-tab="Settings">Back to settings</button></div><p>Demo administrator · Create your club with its first future event.</p><form id="eventForm" class="panel"><div class="row"><label>Hosting organization<input name="org" required></label><label>Event name<input name="name" required></label><label>Genre<select name="genre">${options(interests)}</select></label><label>Event type<select name="type">${options(["Professional", "Social"])}</select></label><label>Date<input name="date" type="date" required></label><label>Time<input name="time" type="time" required></label></div><label>Location<input name="location" required></label><label>Description<textarea name="desc" required></textarea></label><button class="primary">Create club & first event</button></form><h2>Your upcoming events</h2>${
+    html = `<div class="settings"><div class="eyebrow">MAKE IT YOURS</div><h1>Settings</h1><div class="panel"><h2>${esc(state.profile.name)}</h2><p>${esc(state.profile.uni)} · ${esc(state.profile.level)}</p><p>${esc(state.profile.bio)}</p><button data-tab="Profile">Edit profile</button> <button data-tab="Interests">Edit interests</button></div><div class="panel"><h2>App preferences</h2><label class="setting">Open at launch<select id="launch">${options(["Home", "Calendar", "Search", "Feed", "Settings"], state.launch)}</select></label><p class="subtle">Preferences and saved events are saved to your account.</p></div>${state.admins.length ? '<div class="panel"><h2>Club administration</h2><p>Manage events for your organizations.</p><button data-tab="Admin">Open dashboard →</button></div>' : ""}<div class="panel"><h2>Account</h2><p>Signed in with Supabase Auth.</p><button id="forgot">Reset password</button> <button id="signout">Sign out</button></div></div>`;
+  if (tab === "Admin" && state.admins.length)
+    html = `<div class="topline"><h1>Club dashboard</h1><button data-tab="Settings">Back to settings</button></div><p>Create an event for an organization you administer.</p><form id="eventForm" class="panel"><div class="row"><label>Hosting organization<select name="orgID" required>${state.admins.map(o => `<option value="${o.id}">${esc(o.name)}</option>`).join("")}</select></label><label>Event name<input name="name" required></label><label>Genre<select name="genre">${options(interests)}</select></label><label>Event type<select name="type">${options(["Professional", "Social"])}</select></label><label>Date<input name="date" type="date" required></label><label>Time<input name="time" type="time" required></label></div><label>Location<input name="location" required></label><label>Description<textarea name="desc" required></textarea></label><button class="primary">Create event</button></form><h2>Your organizations’ events</h2>${
       state.events
         .filter((e) => e.custom)
         .map(
@@ -240,7 +182,7 @@ function render() {
 function searchResults() {
   return cards(
     state.events.filter((e) =>
-      `${e.name} ${e.genre} ${e.org}`
+      `${e.name} ${e.genres.join(" ")} ${e.org}`
         .toLowerCase()
         .includes(query.toLowerCase()),
     ),
@@ -270,22 +212,24 @@ function bind() {
   );
   $("#submitInterests")?.addEventListener("click", () => {
     if (chosen.length < 3) return;
-    state.interests = chosen;
-    persist();
-    tab = "Home";
-    render();
+    mutate('interests', chosen, () => { tab = 'Home'; });
   });
-  $("#profileForm")?.addEventListener("submit", (e) => {
+  $("#profileForm")?.addEventListener("submit", async (e) => {
     e.preventDefault();
+    if (busy) return;
     const data = Object.fromEntries(new FormData(e.target));
-    if (!data.name.trim()) return;
-    state.profile = {
-      ...data,
-      photo: window.photoData || state.profile?.photo,
-    };
-    persist();
-    tab = "Interests";
-    render();
+    try {
+      const file = $("#photo").files[0];
+      data.photo = state.profile?.photo || null;
+      if (file) {
+        if (file.size > 2e6 || !['image/jpeg','image/png','image/webp'].includes(file.type)) throw new Error('Choose a JPG, PNG or WebP photo smaller than 2 MB.');
+        const path = `${session.user.id}/avatar`;
+        const { error } = await supabase.storage.from('profile-photos').upload(path, file, { upsert: true, contentType: file.type });
+        if (error) throw error;
+        data.photo = supabase.storage.from('profile-photos').getPublicUrl(path).data.publicUrl + '?v=' + Date.now();
+      }
+      await mutate('profile', data, () => { tab = 'Interests'; });
+    } catch(error) { toast(error.message); }
   });
   $("#photo")?.addEventListener("change", (e) => {
     let f = e.target.files[0];
@@ -340,62 +284,52 @@ function bind() {
       .querySelectorAll("[data-event]")
       .forEach((b) => (b.onclick = () => openEvent(Number(b.dataset.event))));
   });
-  $("#launch")?.addEventListener("change", (e) => {
-    state.launch = e.target.value;
-    persist();
-    toast("Launch preference saved");
+  $("#launch")?.addEventListener("change", e => mutate('launch', { launch:e.target.value }, () => toast('Launch preference saved')));
+  $("#forgot")?.addEventListener("click", () => sendReset(session.user.email));
+  $("#signout")?.addEventListener("click", async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) return toast(error.message);
+    $("#detail").close();
+    session = null; state = { profile:null, interests:[], saved:[], launch:'Home', events:[], admins:[] }; chosen=[]; tab='Auth'; render();
   });
-  $("#forgot")?.addEventListener("click", () => {
-    const d = $("#detail");
-    d.innerHTML =
-      '<button class="close" onclick="this.closest(\'dialog\').close()">Close</button><h2>Password recovery</h2><p>In the full app, a verification code will be sent to your registered email address or phone number. This demo does not send codes.</p>';
-    d.showModal();
+  $("#retry")?.addEventListener("click", () => refreshAccount());
+  $("#resetPassword")?.addEventListener("click", () => {
+    const email = $("#authForm [name=email]").value;
+    if (!email || !$("#authForm [name=email]").checkValidity()) return toast('Enter a valid email address first.');
+    sendReset(email);
   });
-  $("#eventForm")?.addEventListener("submit", (e) => {
+  $("#authForm")?.addEventListener("submit", async e => {
     e.preventDefault();
-    const data = Object.fromEntries(new FormData(e.target));
-    if (Object.values(data).some((v) => !v.trim()))
-      return toast("Complete every required field.");
-    if (new Date(data.date + "T" + data.time) <= new Date())
-      return toast("Choose a future date and time.");
-    state.events.push({ ...data, id: Date.now(), custom: true });
-    persist();
-    render();
-    toast("Club and first event created");
+    const { email, password } = Object.fromEntries(new FormData(e.target));
+    const button = e.submitter;
+    document.querySelectorAll('#authForm button').forEach(b=>b.disabled=true);
+    try {
+      const result = recovery ? await supabase.auth.updateUser({password}) : button?.value === 'signup' ? await supabase.auth.signUp({email,password,options:{emailRedirectTo:location.origin}}) : await supabase.auth.signInWithPassword({email,password});
+      if (result.error) throw result.error;
+      if (recovery) { recovery=false; await refreshAccount(); toast('Password updated'); }
+      else if (result.data.session) { session=result.data.session; await refreshAccount(); }
+      else toast('Check your email to confirm your account, then sign in.');
+    } catch(error) { toast(error.message); }
+    finally { document.querySelectorAll('#authForm button').forEach(b=>b.disabled=false); }
   });
-  document.querySelectorAll("[data-delete]").forEach(
-    (b) =>
-      (b.onclick = () => {
-        state.events = state.events.filter(
-          (e) => e.id !== Number(b.dataset.delete),
-        );
-        state.saved = state.saved.filter(
-          (id) => id !== Number(b.dataset.delete),
-        );
-        persist();
-        render();
-        toast(
-          "Event cancelled. Email notifications are not sent in this demo.",
-        );
-      }),
-  );
+  $("#eventForm")?.addEventListener("submit", e => {
+    e.preventDefault();
+    mutate('event', Object.fromEntries(new FormData(e.target)), () => toast('Event created'));
+  });
+  document.querySelectorAll('[data-delete]').forEach(b => b.onclick = () => {
+    if (confirm('Cancel this event for everyone?')) mutate('delete', {id:b.dataset.delete}, () => toast('Event cancelled'));
+  });
+
 }
 function openEvent(id) {
   let e = state.events.find((x) => x.id === id);
   if (!e) return;
   const d = $("#detail"),
     saved = state.saved.includes(id);
-  d.innerHTML = `<button class="close" id="closeDetail" aria-label="Close event details">✕</button><span class="tag">${esc(e.genre)}</span><h1 style="font-size:30px;margin-top:22px">${esc(e.name)}</h1><p>${date(e)}, ${time(e)}<br>${esc(e.location)}<br>Hosted by ${esc(e.org)}</p><p>${esc(e.desc)}</p>${saved ? '<div class="friends"><b>AM</b><b>JL</b><span>Alex & Jamie are going<br><small>Sample friends · demo only</small></span></div>' : ""}<div class="actions"><button class="primary" id="saveEvent">${saved ? "♥ Saved · remove from upcoming" : "♡ Like & add to upcoming"}</button><button id="google">Add a reminder · Google Calendar ↗</button><button id="apple">Add to Apple Calendar (.ics)</button><button id="share">Share event</button></div>`;
+  d.innerHTML = `<button class="close" id="closeDetail" aria-label="Close event details">✕</button><span class="tag">${esc(e.genre)}</span><h1 style="font-size:30px;margin-top:22px">${esc(e.name)}</h1><p>${date(e)}, ${time(e)}<br>${esc(e.location)}<br>Hosted by ${esc(e.org)}</p><p>${esc(e.desc)}</p><div class="actions"><button class="primary" id="saveEvent">${saved ? "♥ Saved · remove from upcoming" : "♡ Like & add to upcoming"}</button><button id="google">Add a reminder · Google Calendar ↗</button><button id="apple">Add to Apple Calendar (.ics)</button><button id="share">Share event</button></div>`;
   if (!d.open) d.showModal();
   $("#closeDetail").onclick = () => d.close();
-  $("#saveEvent").onclick = () => {
-    state.saved = saved
-      ? state.saved.filter((x) => x !== id)
-      : [...state.saved, id];
-    persist();
-    render();
-    openEvent(id);
-  };
+  $("#saveEvent").onclick = () => mutate('save', {id, saved:!saved}, () => openEvent(id));
   const start = new Date(e.date + "T" + e.time),
     end = new Date(start.getTime() + 3600000),
     stamp = (d) =>
@@ -427,9 +361,9 @@ function openEvent(id) {
     const ics = [
       "BEGIN:VCALENDAR",
       "VERSION:2.0",
-      "PRODID:-//Cougar Connect//Prototype//EN",
+      "PRODID:-//Cougar Connect//Events//EN",
       "BEGIN:VEVENT",
-      `UID:${e.id}@cougar-connect.demo`,
+      `UID:${e.id}@cougar-connect`,
       `DTSTAMP:${stamp(new Date())}`,
       `DTSTART:${stamp(start)}`,
       `DTEND:${stamp(end)}`,
@@ -446,7 +380,7 @@ function openEvent(id) {
     setTimeout(() => URL.revokeObjectURL(a.href), 1000);
   };
   $("#share").onclick = async () => {
-    let text = `${e.name} — ${date(e)} at ${time(e)}, ${e.location}. (Sample BYU event)`;
+    let text = `${e.name} — ${date(e)} at ${time(e)}, ${e.location}.`;
     try {
       if (navigator.share) await navigator.share({ title: e.name, text });
       else {
@@ -472,37 +406,36 @@ $(".brand").onclick = (e) => {
     render();
   }
 };
-render();
-if (document.modelContext?.registerTool) {
-  try {
-    Promise.resolve(
-      document.modelContext.registerTool({
-        name: "search_sample_events",
-        description: "Read fictional BYU events matching a text query.",
-        inputSchema: {
-          type: "object",
-          properties: { query: { type: "string" } },
-          required: ["query"],
-          additionalProperties: false,
-        },
-        annotations: { readOnlyHint: true, untrustedContentHint: true },
-        execute(input) {
-          if (!input || typeof input.query !== "string")
-            throw new Error("query must be a string");
-          return state.events
-            .filter((e) =>
-              `${e.name} ${e.genre} ${e.org}`
-                .toLowerCase()
-                .includes(input.query.toLowerCase()),
-            )
-            .map(({ id, name, date, location }) => ({
-              id,
-              name,
-              date,
-              location,
-            }));
-        },
-      }),
-    ).catch(() => {});
-  } catch {}
+async function sendReset(email) {
+  const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: location.origin });
+  toast(error ? error.message : 'Check your email for a password reset link.');
 }
+async function refreshAccount() {
+  tab = 'Loading'; render();
+  try {
+    await loadState();
+    tab = state.profile && state.interests.length >= 3 ? state.launch : state.profile ? 'Interests' : 'Profile';
+    render();
+  } catch(error) { tab='Error'; render(); toast(error.message); }
+}
+async function initialize() {
+  tab='Loading'; render();
+  try {
+    const response = await fetch('/api/config');
+    if (!response.ok) throw new Error('Run the app using npm start.');
+    const config = await response.json();
+    supabase = window.createSupabaseClient(config.url,config.key);
+    supabase.auth.onAuthStateChange((event, current) => {
+      session=current;
+      if (event === 'PASSWORD_RECOVERY') { recovery=true; tab='Auth'; render(); }
+      if (event === 'SIGNED_OUT') { tab='Auth'; render(); }
+    });
+    const { data, error } = await supabase.auth.getSession();
+    if (error) throw error;
+    session=data.session;
+    if (recovery) { tab='Auth'; render(); }
+    else if (session) await refreshAccount();
+    else { tab='Auth'; render(); }
+  } catch(error) { tab='Error'; render(); toast(error.message); }
+}
+initialize();

@@ -1,0 +1,1 @@
+{"name":"cougar-connect","version":"1.0.0","private":true,"type":"module","scripts":{"build":"esbuild js/auth-client.js --bundle --format=iife --outfile=js/vendor/supabase.js","start":"node --env-file-if-exists=.env server.js","test":"node --test"},"dependencies":{"@supabase/supabase-js":"^2.0.0","express":"^5.0.0"},"devDependencies":{"esbuild":"^0.25.0"}}
