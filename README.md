@@ -29,6 +29,8 @@ Supabase will send a verification email during account registration; users must 
 
 ## How to Get It Running
 
+If you already have the tools installed, skip to [Running the App After Initial Setup](#running-the-app-after-initial-setup).
+
 ### macOS
 
 1. On macOS, install Homebrew using the instructions at [brew.sh](https://brew.sh), then install Node.js and npm:
@@ -91,6 +93,50 @@ Supabase will send a verification email during account registration; users must 
 7. Complete the Create Profile form and continue through interest selection.
 
 If the integration branch requires Supabase configuration, use its environment-variable instructions or obtain the required configuration from the team. This static checkout contains no package manifest or Supabase configuration, so run the npm commands in the cloned team repository.
+
+## Running the App After Initial Setup
+
+Use macOS Terminal or Windows Command Prompt. You only need to install Homebrew, Node.js, and Git once. Having Homebrew installed alone does not install Node.js; if `node --version` or `npm --version` fails on macOS, run `brew install node` first.
+
+### Tools Installed, but No Local Copy Yet
+
+If Node.js, npm, and Git are already installed, start here:
+
+```sh
+git clone https://github.com/nickgcioffi/Cougar-Connect.git
+cd Cougar-Connect
+git checkout supabase-integration
+npm install
+npm run build
+npm start
+```
+
+### Opening an Existing Local Copy
+
+Open a terminal in your cloned `Cougar-Connect` folder (or use `cd` with its actual path), then run:
+
+```sh
+git checkout supabase-integration
+npm start
+```
+
+If this copy has never been set up, run `npm install` and `npm run build` before `npm start`. For a copy that is already set up, `npm start` is enough to restart the app.
+
+### Getting the Latest Team Updates
+
+In your cloned repository, save and commit any local work before switching branches or pulling updates. Then run:
+
+```sh
+git checkout supabase-integration
+git pull --ff-only origin supabase-integration
+npm install
+npm run build
+npm start
+```
+
+If Git reports a conflict or that it cannot fast-forward, resolve the branch differences with the team before continuing.
+
+After starting the server, open the local URL printed in the terminal and sign in with your existing verified account. Keep the terminal open while using the app; press `Ctrl+C` to stop the server. If the server is already running, you can open its URL directly. You do not need to register or verify your email again for an existing verified account.
 
 ## Verifying the Vertical Slice
 
