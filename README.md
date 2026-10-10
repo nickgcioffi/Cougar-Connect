@@ -29,6 +29,8 @@ Supabase will send a verification email during account registration; users must 
 
 ## How to Get It Running
 
+### macOS
+
 1. On macOS, install Homebrew using the instructions at [brew.sh](https://brew.sh), then install Node.js and npm:
 
    ```sh
@@ -56,6 +58,37 @@ Supabase will send a verification email during account registration; users must 
 4. Open the local app URL printed in the terminal. Keep the server running while using the app; press `Ctrl+C` to stop it.
 5. Register using an email address you can access. **Supabase will send a verification email.** Check your inbox and spam folder, open the email, and follow its verification link. Return to the app and sign in if prompted.
 6. Complete the Create Profile form and continue through interest selection.
+
+### Windows
+
+1. Install the LTS version of Node.js from [nodejs.org](https://nodejs.org/en/download), selecting the Windows installer. Keep npm and the option to add Node.js to PATH enabled. Install Git using the [Git for Windows installer](https://git-scm.com/downloads/win).
+2. Open a new Command Prompt window after installation and verify the tools:
+
+   ```bat
+   node --version
+   npm --version
+   git --version
+   ```
+
+3. Clone the repository and switch to the integration branch:
+
+   ```bat
+   git clone https://github.com/nickgcioffi/Cougar-Connect.git
+   cd Cougar-Connect
+   git checkout supabase-integration
+   ```
+
+4. Install dependencies, build the app, and start the local server:
+
+   ```bat
+   npm install
+   npm run build
+   npm start
+   ```
+
+5. Open the local app URL printed in Command Prompt. Keep the server running while using the app; press `Ctrl+C` to stop it.
+6. Register using an email address you can access. Check your inbox and spam folder for the verification email, follow its link, then return to the app and sign in if prompted.
+7. Complete the Create Profile form and continue through interest selection.
 
 If the integration branch requires Supabase configuration, use its environment-variable instructions or obtain the required configuration from the team. This static checkout contains no package manifest or Supabase configuration, so run the npm commands in the cloned team repository.
 
