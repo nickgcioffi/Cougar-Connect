@@ -99,6 +99,6 @@ The target working button is **Create profile →**: it should store all informa
 1. Start the integration branch using the instructions above, register, and verify your email through the link Supabase sends.
 2. Enter a recognizable full name such as `John Doe`, select a university and study level, and enter a graduation month and primary interest. Add a distinctive bio such as `Looking for tech networking events` and an optional profile photo.
 3. Click **Create profile →** and confirm that the app reports success or advances to the next onboarding step. Complete interest selection if prompted.
-4. In the team's Supabase project, confirm that the saved profile contains every submitted field, including the photo reference if a photo was uploaded.
+4. In the team's Supabase project (nickgcioffi's Org), confirm that the saved profile contains every submitted field, including the photo reference if a photo was uploaded.
 5. Refresh the app, then open the profile or **Settings → Edit profile**. Confirm that the name, university, study level, graduation month, primary interest, bio, and optional photo are restored from the backend.
 6. Sign out and sign back in with the verified account, then confirm that the same profile is available. This checks that the saved information is associated with the correct account.
