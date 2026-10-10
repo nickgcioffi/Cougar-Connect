@@ -10,9 +10,7 @@ BYU events are scattered across campus organizations, locations, and communicati
 
 The Step 1 ERD models User, Interest, Events, and Organization, with join tables for user interests, event interests, saved user events, and event co-hosts.
 
-The team is implementing a Supabase backend to persist all information entered on the Create Profile page: full name, university, study level, graduation month, primary interest, bio, and optional profile photo. Full name corresponds to FirstName and LastName; university, graduation month, bio, and photo correspond to UniName, GradDate, Biography, and PhotoURL. Study level and primary interest correspond to StudyLevel and PrimaryInterest in the ERD's User table.
-
-The code in this checkout currently stores the profile in localStorage, with one `name` value and a photo data URL. UserID, created_at, separate first/last names, and Supabase persistence are not yet implemented here.
+We are implementing a Supabase backend to persist all information entered on the Create Profile page: full name, university, study level, graduation month, primary interest, bio, and optional profile photo. Full name corresponds to FirstName and LastName; university, graduation month, bio, and photo correspond to UniName, GradDate, Biography, and PhotoURL. Study level and primary interest correspond to StudyLevel and PrimaryInterest in the ERD User table.
 
 ## Tech Stack
 
@@ -27,11 +25,9 @@ The code in this checkout currently stores the profile in localStorage, with one
 | Local tooling | Homebrew, Node.js, and npm | Homebrew installs Node.js and npm on macOS; npm installs dependencies, builds the app, and starts the local server. |
 | Runtime | Modern web browser and the npm-started local server | Gives teammates a consistent way to run the Supabase integration branch. |
 
-The lightweight frontend keeps setup simple and lets the team focus on the profile and event-discovery experience while implementing the Supabase backend. The team’s `supabase-integration` branch uses the npm workflow below. Supabase will send a verification email during account registration; users must follow the link in that email to verify their email address. The static files in this checkout still represent the earlier localStorage prototype. The ERD describes the intended relational model; localStorage currently holds one JSON state object containing the profile, interests, saved event IDs, preferences, and events.
+Supabase will send a verification email during account registration; users must follow the link in that email to verify their email address. The static files in this checkout still represent the earlier localStorage prototype.
 
 ## How to Get It Running
-
-These instructions target the team's `supabase-integration` branch in [Cougar-Connect on GitHub](https://github.com/nickgcioffi/Cougar-Connect).
 
 1. On macOS, install Homebrew using the instructions at [brew.sh](https://brew.sh), then install Node.js and npm:
 
@@ -61,8 +57,6 @@ These instructions target the team's `supabase-integration` branch in [Cougar-Co
 5. Register using an email address you can access. **Supabase will send a verification email.** Check your inbox and spam folder, open the email, and follow its verification link. Return to the app and sign in if prompted.
 6. Complete the Create Profile form and continue through interest selection.
 
-For an existing copy of the team repository, start with `git checkout supabase-integration`, then run `npm install`, `npm run build`, and `npm start`.
-
 If the integration branch requires Supabase configuration, use its environment-variable instructions or obtain the required configuration from the team. This static checkout contains no package manifest or Supabase configuration, so run the npm commands in the cloned team repository.
 
 ## Verifying the Vertical Slice
@@ -70,10 +64,8 @@ If the integration branch requires Supabase configuration, use its environment-v
 The target working button is **Create profile →**: it should store all information entered on the Create Profile page in Supabase and allow the app to retrieve it after a refresh.
 
 1. Start the integration branch using the instructions above, register, and verify your email through the link Supabase sends.
-2. Enter a recognizable full name such as `Jordan Miller`, select a university and study level, and enter a graduation month and primary interest. Add a distinctive bio such as `Looking for technology networking events` and an optional profile photo.
+2. Enter a recognizable full name such as `John Doe`, select a university and study level, and enter a graduation month and primary interest. Add a distinctive bio such as `Looking for tech networking events` and an optional profile photo.
 3. Click **Create profile →** and confirm that the app reports success or advances to the next onboarding step. Complete interest selection if prompted.
-4. In the team's Supabase project, confirm that the saved profile contains every submitted field, including the photo reference if a photo was uploaded. Use the actual table and field names defined by the integration branch.
+4. In the team's Supabase project, confirm that the saved profile contains every submitted field, including the photo reference if a photo was uploaded.
 5. Refresh the app, then open the profile or **Settings → Edit profile**. Confirm that the name, university, study level, graduation month, primary interest, bio, and optional photo are restored from the backend.
 6. Sign out and sign back in with the verified account, then confirm that the same profile is available. This checks that the saved information is associated with the correct account.
-
-The earlier static prototype saves under the localStorage key `cougar-demo`. Persistence in that prototype alone does not verify the Supabase vertical slice. The integration workflow above reflects the team's supplied setup; it has not been run against the remote branch from this checkout.
