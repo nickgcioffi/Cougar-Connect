@@ -1,5 +1,11 @@
 # Cougar Connect
 
+## Access the Website
+
+Open [http://stufordmachine.com:5676/](http://stufordmachine.com:5676/) in your web browser. You can type this URL directly into the address bar on macOS or Windows; include `http://` and the port `:5676`.
+
+No installation or local server setup is required to use the hosted website. If you prefer localhost, follow [Run Locally (Optional)](#run-locally-optional) for macOS or Windows.
+
 ## App Summary
 
 BYU events are scattered across campus organizations, locations, and communication channels. Students can struggle to know where to look or which opportunities are relevant to them. Cougar Connect focuses first on an upperclassman who wants to build their résumé and get involved on campus. The app brings sample events into one place, with a searchable calendar and filters for interests, event type, time, location, and hosting organization. Students create a profile and select interests to discover opportunities that fit their goals. They can save events, review event details, and export events to their calendars. The team is connecting this responsive coursework app to Supabase for profile storage and email verification, providing a starting point for maintenance and support for additional student personas.
@@ -22,14 +28,13 @@ We are implementing a Supabase backend to persist all information entered on the
 | Persistence | Browser localStorage, key `cougar-demo` | Demonstrates persistence across refreshes without server setup. |
 | Backend (in progress) | Supabase | The team is implementing shared backend persistence for every input on the Create Profile page, aligned with the ERD. |
 | Data | Fictional sample events and locally created events | Lets the team demonstrate discovery before connecting real event sources. |
-| Local tooling | Homebrew, Node.js, and npm | Homebrew installs Node.js and npm on macOS; npm installs dependencies, builds the app, and starts the local server. |
-| Runtime | Modern web browser and the npm-started local server | Gives teammates a consistent way to run the Supabase integration branch. |
+| Access | Modern web browser | Opens the hosted app at http://stufordmachine.com:5676/. |
 
 Supabase will send a verification email during account registration; users must follow the link in that email to verify their email address. The static files in this checkout still represent the earlier localStorage prototype.
 
-## How to Get It Running
+## Run Locally (Optional)
 
-If you already have the tools installed, skip to [Running the App After Initial Setup](#running-the-app-after-initial-setup).
+If you prefer to run the app on your own computer using localhost, follow the same macOS or Windows installation instructions below. These steps are optional; accessing the hosted website does not require installation. If you already have the tools installed, skip to [Running a Local Copy After Initial Setup](#running-a-local-copy-after-initial-setup).
 
 ### macOS
 
@@ -94,7 +99,7 @@ If you already have the tools installed, skip to [Running the App After Initial 
 
 If the integration branch requires Supabase configuration, use its environment-variable instructions or obtain the required configuration from the team. This static checkout contains no package manifest or Supabase configuration, so run the npm commands in the cloned team repository.
 
-## Running the App After Initial Setup
+## Running a Local Copy After Initial Setup
 
 Use macOS Terminal or Windows Command Prompt. You only need to install Homebrew, Node.js, and Git once. Having Homebrew installed alone does not install Node.js; if `node --version` or `npm --version` fails on macOS, run `brew install node` first.
 
@@ -142,7 +147,7 @@ After starting the server, open the local URL printed in the terminal and sign i
 
 The target working button is **Create profile →**: it should store all information entered on the Create Profile page in Supabase and allow the app to retrieve it after a refresh.
 
-1. Start the integration branch using the instructions above, register, and verify your email through the link Supabase sends.
+1. Open [http://stufordmachine.com:5676/](http://stufordmachine.com:5676/). Sign in with an existing verified account, or register and verify your email through the link Supabase sends.
 2. Enter a recognizable full name such as `John Doe`, select a university and study level, and enter a graduation month and primary interest. Add a distinctive bio such as `Looking for tech networking events` and an optional profile photo.
 3. Click **Create profile →** and confirm that the app reports success or advances to the next onboarding step. Complete interest selection if prompted.
 4. In the team's Supabase project (nickgcioffi's Org), confirm that the saved profile contains every submitted field, including the photo reference if a photo was uploaded.
