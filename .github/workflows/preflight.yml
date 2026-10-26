@@ -1,0 +1,72 @@
+name: Cougar Connect preflight
+
+on:
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: Server operation
+        required: true
+        default: stage
+        type: choice
+        options: [probe, stage]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cougar-connect-production
+  cancel-in-progress: false
+
+jobs:
+  guard:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require protected main
+        run: test "$GITHUB_REF" = refs/heads/main
+
+  deploy:
+    needs: guard
+    if: github.ref == 'refs/heads/main'
+    environment: production-main
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3 verified commit
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: 24.22.1
+          package-manager-cache: false
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+      - name: Configure pinned host and deployment key
+        env:
+          KEY: ${{ secrets.COUGAR_SSH_PRIVATE_KEY }}
+          KNOWN: ${{ secrets.COUGAR_SSH_KNOWN_HOSTS }}
+        run: |
+          install -d -m 0700 "$HOME/.ssh"
+          install -m 0600 /dev/null "$HOME/.ssh/key"
+          printf '%s\n' "$KEY" >"$HOME/.ssh/key"
+          install -m 0600 /dev/null "$HOME/.ssh/known_hosts"
+          printf '%s\n' "$KNOWN" >"$HOME/.ssh/known_hosts"
+      - name: Non-mutating connectivity probe
+        env:
+          HOST: ${{ secrets.COUGAR_SSH_HOST }}
+          PORT: ${{ secrets.COUGAR_SSH_PORT }}
+        run: ssh -i "$HOME/.ssh/key" -p "$PORT" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes "cougar-deploy@$HOST" probe
+      - name: Run approved server operation
+        env:
+          HOST: ${{ secrets.COUGAR_SSH_HOST }}
+          PORT: ${{ secrets.COUGAR_SSH_PORT }}
+          OPERATION: ${{ inputs.operation }}
+        run: |
+          case "$OPERATION" in
+            probe) command='probe' ;;
+            stage) command="$OPERATION $GITHUB_SHA" ;;
+            *) exit 64 ;;
+          esac
+          ssh -i "$HOME/.ssh/key" -p "$PORT" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes "cougar-deploy@$HOST" "$command"

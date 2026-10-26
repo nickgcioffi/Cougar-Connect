@@ -1,8 +1,17 @@
 import express from 'express';
 import { createClient } from '@supabase/supabase-js';
+import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 const app = express();
 const root = fileURLToPath(new URL('.', import.meta.url));
+const host = process.env.HOST || '127.0.0.1';
+const port = Number(process.env.PORT || 3000);
+let revision = 'development';
+try {
+  revision = readFileSync(root + '.release-sha', 'utf8').trim() || revision;
+} catch (error) {
+  if (error.code !== 'ENOENT') throw error;
+}
 const url = process.env.SUPABASE_URL || 'https://hvomujwvovwmilotgolp.supabase.co';
 const key = process.env.SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_HPk1MkktUxhDvtRp8tS1OA_i-YCp2cD';
 app.disable('x-powered-by');
@@ -42,8 +51,12 @@ app.post('/api/action', async (req,res,next) => {
     res.json({ ok:true });
   } catch(error) { next(error); }
 });
+app.get('/healthz', (req,res) => {
+  res.set('Cache-Control', 'no-store');
+  res.json({ ok:true, revision });
+});
 app.get('/', (req,res)=>res.sendFile(root+'index.html'));
 app.use('/js', express.static(root+'js'));
 app.use('/css', express.static(root+'css'));
 app.use((error,req,res,next)=> { console.error(error.message); res.status(400).json({error:error.message || 'Unable to complete the request.'}); });
-app.listen(Number(process.env.PORT || 3000), ()=>console.log('Cougar Connect: http://localhost:'+(process.env.PORT || 3000)));
+app.listen(port, host, ()=>console.log(`Cougar Connect: http://${host}:${port}`));
