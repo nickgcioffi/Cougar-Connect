@@ -1,5 +1,11 @@
 # Cougar Connect
 
+## Access the Website
+
+Open [http://stufordmachine.com:5676/](http://stufordmachine.com:5676/) in your web browser. You can type this URL directly into the address bar on macOS or Windows; include `http://` and the port `:5676`.
+
+No Homebrew, Node.js, Git, or local server setup is required to use the hosted website. The local setup instructions below are for teammates developing or testing a local copy of the app.
+
 ## App Summary
 
 BYU events are scattered across campus organizations, locations, and communication channels. Students can struggle to know where to look or which opportunities are relevant to them. Cougar Connect focuses first on an upperclassman who wants to build their résumé and get involved on campus. The app brings sample events into one place, with a searchable calendar and filters for interests, event type, time, location, and hosting organization. Students create a profile and select interests to discover opportunities that fit their goals. They can save events, review event details, and export events to their calendars. The team is connecting this responsive coursework app to Supabase for profile storage and email verification, providing a starting point for maintenance and support for additional student personas.
@@ -27,9 +33,9 @@ We are implementing a Supabase backend to persist all information entered on the
 
 Supabase will send a verification email during account registration; users must follow the link in that email to verify their email address. The static files in this checkout still represent the earlier localStorage prototype.
 
-## How to Get It Running
+## Local Development Setup (Optional)
 
-If you already have the tools installed, skip to [Running the App After Initial Setup](#running-the-app-after-initial-setup).
+To use the hosted website, open [http://stufordmachine.com:5676/](http://stufordmachine.com:5676/). Follow this section only to run a local development copy. If you already have the tools installed, skip to [Running a Local Copy After Initial Setup](#running-a-local-copy-after-initial-setup).
 
 ### macOS
 
@@ -94,7 +100,7 @@ If you already have the tools installed, skip to [Running the App After Initial 
 
 If the integration branch requires Supabase configuration, use its environment-variable instructions or obtain the required configuration from the team. This static checkout contains no package manifest or Supabase configuration, so run the npm commands in the cloned team repository.
 
-## Running the App After Initial Setup
+## Running a Local Copy After Initial Setup
 
 Use macOS Terminal or Windows Command Prompt. You only need to install Homebrew, Node.js, and Git once. Having Homebrew installed alone does not install Node.js; if `node --version` or `npm --version` fails on macOS, run `brew install node` first.
 
