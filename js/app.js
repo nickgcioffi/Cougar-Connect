@@ -84,7 +84,7 @@ function render() {
             `<button data-tab="${t}" class="${tab === t ? "active" : ""}"><span>${["⌂", "▦", "▤", "⚙"][i]}</span>${t}</button>`,
         )
         .join("");
-        
+
   $("#profileBadge").textContent = state.profile
       ? state.profile.name
         .split(" ")
@@ -129,14 +129,14 @@ function render() {
       2,
     );
   if (tab === "Home")
-    html = `<div class="welcome topline"><div><div class="eyebrow">MAKE ROOM FOR WHAT’S NEXT</div><h1>Hey, ${esc(state.profile.name.split(" ")[0])}.</h1><p>Your next connection could be just around campus.</p></div><span class="tag">${new Date().getFullYear()}</span></div><div class="banner"><div><div class="eyebrow" style="color:#a6c6ff">A LITTLE EXPLORING GOES A LONG WAY</div><h2>Find something worth showing up for.</h2><p>Build your résumé. Meet your people. Try something new.</p></div><button data-tab="Calendar">Explore calendar ↗</button></div><div class="topline"><h2>On your radar <span class="subtle">${state.saved.length} saved</span></h2><button data-tab="Calendar">View calendar</button></div>${cards(state.events.filter((e) => state.saved.includes(e.id)))}<h2>Picked for your interests</h2>${cards(state.events.filter((e) => e.genres.some(g => state.interests.includes(g))))}`;
+    html = `<div class="welcome topline"><div><div class="eyebrow">MAKE ROOM FOR WHAT’S NEXT</div><h1>Hey, ${esc(state.profile.name.split(" ")[0])}.</h1><p>Your next connection could be just around campus.</p></div></div><div class="banner"><div><div class="eyebrow" style="color:#a6c6ff">A LITTLE EXPLORING GOES A LONG WAY</div><h2>Find something worth showing up for.</h2><p>Build your résumé. Meet your people. Try something new.</p></div><button data-tab="Calendar">Explore calendar ↗</button></div><div class="topline"><h2>On your radar <span class="subtle">${state.saved.length} saved</span></h2><button data-tab="Calendar">View calendar</button></div>${cards(state.events.filter((e) => state.saved.includes(e.id)))}<h2>Picked for your interests</h2>${cards(state.events.filter((e) => e.genres.some(g => state.interests.includes(g))))}`;
   if (tab === "Calendar") {
     let filtered = state.events.filter(
       (e) =>
         (!filters.genre || e.genres.includes(filters.genre)) &&
         (!filters.type || e.type === filters.type) &&
         (!filters.location || e.location === filters.location) &&
-        (!filters.org || e.org === filters.org) &&
+        (!filters.org || e.org === filters.org) &
         (!filters.time ||
           (filters.time === "Before 5 PM"
             ? e.time < "17:00"
