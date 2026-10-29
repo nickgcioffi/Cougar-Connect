@@ -1,0 +1,68 @@
+name: Deploy Cougar Connect
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cougar-connect-production
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: 24.22.1
+          package-manager-cache: false
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+
+  deploy:
+    needs: validate
+    # Set this repository variable to true only after the SYSTEM service has
+    # passed stage validation and the approved live cutover is healthy.
+    if: github.ref == 'refs/heads/main' && vars.COUGAR_LIVE_DEPLOY_ENABLED == 'true'
+    environment: production-main
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Configure pinned SSH credentials
+        env:
+          KEY: ${{ secrets.COUGAR_SSH_PRIVATE_KEY }}
+          KNOWN: ${{ secrets.COUGAR_SSH_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          umask 077
+          install -d -m 0700 "$HOME/.ssh"
+          printf '%s\n' "$KEY" >"$HOME/.ssh/key"
+          printf '%s\n' "$KNOWN" >"$HOME/.ssh/known_hosts"
+          chmod 0600 "$HOME/.ssh/key" "$HOME/.ssh/known_hosts"
+
+      - name: Verify restricted SSH access
+        env:
+          HOST: ${{ secrets.COUGAR_SSH_HOST }}
+          PORT: ${{ secrets.COUGAR_SSH_PORT }}
+        run: >-
+          ssh -i "$HOME/.ssh/key" -p "$PORT" -o BatchMode=yes
+          -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes
+          "cougar-deploy@$HOST" probe
+
+      - name: Deploy the exact protected-main revision
+        env:
+          HOST: ${{ secrets.COUGAR_SSH_HOST }}
+          PORT: ${{ secrets.COUGAR_SSH_PORT }}
+        run: >-
+          ssh -i "$HOME/.ssh/key" -p "$PORT" -o BatchMode=yes
+          -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes
+          "cougar-deploy@$HOST" "deploy $GITHUB_SHA"
