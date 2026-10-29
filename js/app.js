@@ -78,19 +78,42 @@ function setup(content, step) {
 function render() {
   $("#nav").innerHTML = ["Profile", "Interests", "Auth", "Loading", "Error"].includes(tab)
     ? ""
-    : ["Home", "Calendar", "Search", "Feed", "Settings"]
+    : ["Home", "Calendar", "Feed", "Settings"]
         .map(
           (t, i) =>
-            `<button data-tab="${t}" class="${tab === t ? "active" : ""}"><span>${["⌂", "▦", "⌕", "▤", "⚙"][i]}</span>${t}</button>`,
+            `<button data-tab="${t}" class="${tab === t ? "active" : ""}"><span>${["⌂", "▦", "▤", "⚙"][i]}</span>${t}</button>`,
         )
         .join("");
+
   $("#profileBadge").textContent = state.profile
-    ? state.profile.name
+      ? state.profile.name
         .split(" ")
         .map((x) => x[0])
         .join("")
         .slice(0, 2)
     : "Y";
+  
+    const globalSearch = $("#globalSearch");
+
+    if (globalSearch) {
+      globalSearch.hidden = ![
+        "Home",
+        "Calendar",
+        "Feed",
+        "Settings",
+        "Admin",
+      ].includes(tab);
+
+      const searchInput = $("#search");
+
+      if (searchInput) {
+        searchInput.value = query;
+      }
+
+      updateSearchDropdown();
+    }
+
+
   let html = "";
   if (tab === "Auth") html = setup(`<h2>${recovery ? 'Choose a new password' : 'Welcome to Cougar Connect'}</h2><form id="authForm">${recovery ? '' : '<label>Email<input name="email" type="email" autocomplete="email" required></label>'}<label>Password<input name="password" type="password" autocomplete="${recovery ? 'new-password' : 'current-password'}" minlength="8" required></label><button class="primary wide" name="action" value="login">${recovery ? 'Update password' : 'Sign in'}</button>${recovery ? '' : '<button class="wide" name="action" value="signup">Create account</button>'}</form>${recovery ? '' : '<button id="resetPassword">Forgot password</button>'}`, 1);
   if (tab === "Loading") html = '<div class="panel empty">Loading your account…</div>';
@@ -106,14 +129,14 @@ function render() {
       2,
     );
   if (tab === "Home")
-    html = `<div class="welcome topline"><div><div class="eyebrow">MAKE ROOM FOR WHAT’S NEXT</div><h1>Hey, ${esc(state.profile.name.split(" ")[0])}.</h1><p>Your next connection could be just around campus.</p></div><span class="tag">${new Date().getFullYear()}</span></div><div class="banner"><div><div class="eyebrow" style="color:#a6c6ff">A LITTLE EXPLORING GOES A LONG WAY</div><h2>Find something worth showing up for.</h2><p>Build your résumé. Meet your people. Try something new.</p></div><button data-tab="Calendar">Explore calendar ↗</button></div><div class="topline"><h2>On your radar <span class="subtle">${state.saved.length} saved</span></h2><button data-tab="Calendar">View calendar</button></div>${cards(state.events.filter((e) => state.saved.includes(e.id)))}<h2>Picked for your interests</h2>${cards(state.events.filter((e) => e.genres.some(g => state.interests.includes(g))))}`;
+    html = `<div class="welcome topline"><div><div class="eyebrow">MAKE ROOM FOR WHAT’S NEXT</div><h1>Hey, ${esc(state.profile.name.split(" ")[0])}.</h1><p>Your next connection could be just around campus.</p></div></div><div class="banner"><div><div class="eyebrow" style="color:#a6c6ff">A LITTLE EXPLORING GOES A LONG WAY</div><h2>Find something worth showing up for.</h2><p>Build your résumé. Meet your people. Try something new.</p></div><button data-tab="Calendar">Explore calendar ↗</button></div><div class="topline"><h2>On your radar <span class="subtle">${state.saved.length} saved</span></h2><button data-tab="Calendar">View calendar</button></div>${cards(state.events.filter((e) => state.saved.includes(e.id)))}<h2>Picked for your interests</h2>${cards(state.events.filter((e) => e.genres.some(g => state.interests.includes(g))))}`;
   if (tab === "Calendar") {
     let filtered = state.events.filter(
       (e) =>
         (!filters.genre || e.genres.includes(filters.genre)) &&
         (!filters.type || e.type === filters.type) &&
         (!filters.location || e.location === filters.location) &&
-        (!filters.org || e.org === filters.org) &&
+        (!filters.org || e.org === filters.org) &
         (!filters.time ||
           (filters.time === "Before 5 PM"
             ? e.time < "17:00"
@@ -160,12 +183,10 @@ function render() {
       "",
     )}</div></div>${filtered.some((e) => e.date.startsWith(`${year}-${String(month + 1).padStart(2, "0")}`)) ? "" : '<div class="empty">No events found for this month and these filters.</div>'}`;
   }
-  if (tab === "Search")
-    html = `<div class="eyebrow">FIND YOUR NEXT THING</div><h1>What are you looking for?</h1><input class="searchBox" id="search" aria-label="Search events" placeholder="Search events, interests, or organizations…" value="${esc(query)}"><div id="results">${searchResults()}</div>`;
   if (tab === "Feed")
     html = `<div class="eyebrow">RECOMMENDED FEED</div><h1>A feed that gets you.</h1><div class="panel empty"><span class="tag">WIP</span><h2 style="margin-top:20px">Good things are on the way.</h2><p>Your personalized event feed is a work in progress.<br>Explore events picked for your interests on Home.</p><button class="primary" data-tab="Home">Back to Home</button></div>`;
   if (tab === "Settings")
-    html = `<div class="settings"><div class="eyebrow">MAKE IT YOURS</div><h1>Settings</h1><div class="panel"><h2>${esc(state.profile.name)}</h2><p>${esc(state.profile.uni)} · ${esc(state.profile.level)}</p><p>${esc(state.profile.bio)}</p><button data-tab="Profile">Edit profile</button> <button data-tab="Interests">Edit interests</button></div><div class="panel"><h2>App preferences</h2><label class="setting">Open at launch<select id="launch">${options(["Home", "Calendar", "Search", "Feed", "Settings"], state.launch)}</select></label><p class="subtle">Preferences and saved events are saved to your account.</p></div>${state.admins.length ? '<div class="panel"><h2>Club administration</h2><p>Manage events for your organizations.</p><button data-tab="Admin">Open dashboard →</button></div>' : ""}<div class="panel"><h2>Account</h2><p>Signed in with Supabase Auth.</p><button id="forgot">Reset password</button> <button id="signout">Sign out</button></div></div>`;
+    html = `<div class="settings"><div class="eyebrow">MAKE IT YOURS</div><h1>Settings</h1><div class="panel"><h2>${esc(state.profile.name)}</h2><p>${esc(state.profile.uni)} · ${esc(state.profile.level)}</p><p>${esc(state.profile.bio)}</p><button data-tab="Profile">Edit profile</button> <button data-tab="Interests">Edit interests</button></div><div class="panel"><h2>App preferences</h2><label class="setting">Open at launch<select id="launch">${options(["Home", "Calendar", "Feed", "Settings"], state.launch)}</select></label><p class="subtle">Preferences and saved events are saved to your account.</p></div>${state.admins.length ? '<div class="panel"><h2>Club administration</h2><p>Manage events for your organizations.</p><button data-tab="Admin">Open dashboard →</button></div>' : ""}<div class="panel"><h2>Account</h2><p>Signed in with Supabase Auth.</p><button id="forgot">Reset password</button> <button id="signout">Sign out</button></div></div>`;
   if (tab === "Admin" && state.admins.length)
     html = `<div class="topline"><h1>Club dashboard</h1><button data-tab="Settings">Back to settings</button></div><p>Create an event for an organization you administer.</p><form id="eventForm" class="panel"><div class="row"><label>Hosting organization<select name="orgID" required>${state.admins.map(o => `<option value="${o.id}">${esc(o.name)}</option>`).join("")}</select></label><label>Event name<input name="name" required></label><label>Genre<select name="genre">${options(interests)}</select></label><label>Event type<select name="type">${options(["Professional", "Social"])}</select></label><label>Date<input name="date" type="date" required></label><label>Time<input name="time" type="time" required></label></div><label>Location<input name="location" required></label><label>Description<textarea name="desc" required></textarea></label><button class="primary">Create event</button></form><h2>Your organizations’ events</h2>${
       state.events
@@ -179,15 +200,59 @@ function render() {
   $("#app").innerHTML = html;
   bind();
 }
+
 function searchResults() {
-  return cards(
-    state.events.filter((e) =>
+  const term = query.trim().toLowerCase();
+
+  if (!term) return "";
+
+  const matches = state.events
+    .filter((e) =>
       `${e.name} ${e.genres.join(" ")} ${e.org}`
         .toLowerCase()
-        .includes(query.toLowerCase()),
-    ),
-  );
+        .includes(term),
+    )
+    .slice(0, 8);
+
+  if (!matches.length) {
+    return '<div class="searchNoResults">No matching events found.</div>';
+  }
+
+  return matches
+    .map(
+      (e) => `
+        <button class="searchResult" data-event="${e.id}">
+          <strong>${esc(e.name)}</strong>
+          <small>${esc(e.genre)} · ${esc(e.org)}</small>
+          <small>${date(e)} · ${time(e)} · ${esc(e.location)}</small>
+        </button>
+      `,
+    )
+    .join("");
 }
+
+
+function updateSearchDropdown() {
+  const input = $("#search");
+  const dropdown = $("#globalSearchResults");
+
+  if (!input || !dropdown) return;
+
+  dropdown.innerHTML = searchResults();
+  dropdown.hidden = !query.trim();
+
+  dropdown.querySelectorAll("[data-event]").forEach((button) => {
+    button.onclick = () => {
+      const eventId = Number(button.dataset.event);
+      query = "";
+      input.value = "";
+      dropdown.hidden = true;
+      openEvent(eventId);
+    };
+  });
+}
+
+
 function bind() {
   document.querySelectorAll("[data-tab]").forEach(
     (b) =>
@@ -277,13 +342,25 @@ function bind() {
       render();
     }),
   );
-  $("#search")?.addEventListener("input", (e) => {
-    query = e.target.value;
-    $("#results").innerHTML = searchResults();
-    document
-      .querySelectorAll("[data-event]")
-      .forEach((b) => (b.onclick = () => openEvent(Number(b.dataset.event))));
-  });
+
+  const searchInput = $("#search");
+
+  if (searchInput) {
+    searchInput.oninput = (e) => {
+      query = e.target.value;
+      updateSearchDropdown();
+    };
+
+    searchInput.onkeydown = (e) => {
+      if (e.key === "Escape") {
+        query = "";
+        searchInput.value = "";
+        updateSearchDropdown();
+        searchInput.blur();
+      }
+    };
+  }
+
   $("#launch")?.addEventListener("change", e => mutate('launch', { launch:e.target.value }, () => toast('Launch preference saved')));
   $("#forgot")?.addEventListener("click", () => sendReset(session.user.email));
   $("#signout")?.addEventListener("click", async () => {
