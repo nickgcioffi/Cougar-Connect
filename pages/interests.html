@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Interests · Cougar Connect</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+  </head>
+  <body class="page-loading">
+    <header>
+      <a class="brand" href="/home"
+        ><span class="mark">Y</span> cougar<span class="light">connect</span></a
+      ><span class="demo">PROFILE SETUP</span>
+    </header>
+    <main>
+      <div class="setup">
+        <aside class="intro">
+          <div>
+            <div class="eyebrow">YOUR CAMPUS. YOUR NEXT CHAPTER.</div>
+            <h1>Find your kind<br />of campus.</h1>
+            <p>Choose the topics that interest you.</p>
+          </div>
+        </aside>
+        <section class="formside">
+          <div class="eyebrow">STEP 02 / 02</div>
+          <h2>What draws you in?</h2>
+          <p>Pick at least three interests.</p>
+          <div id="interestChoices" class="choices"></div>
+          <p id="interestCount"></p>
+          <button id="saveInterests" class="primary wide">
+            Find my events →</button
+          ><a href="/profile">Back to profile</a>
+        </section>
+      </div>
+    </main>
+    <div id="toast" role="status"></div>
+    <script src="/js/vendor/supabase.js"></script>
+    <script type="module" src="/js/pages/interests.js"></script>
+  </body>
+</html>

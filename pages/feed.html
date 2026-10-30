@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Feed · Cougar Connect</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+  </head>
+  <body class="page-loading">
+    <header>
+      <a class="brand" href="/home"
+        ><span class="mark">Y</span> cougar<span class="light">connect</span></a
+      >
+      <div id="globalSearch" class="globalSearch">
+        <div class="searchInputWrap">
+          <span class="searchIcon" aria-hidden="true">⌕</span
+          ><input
+            class="searchBox"
+            id="search"
+            type="search"
+            aria-label="Search events"
+            placeholder="Search events..."
+            autocomplete="off"
+          />
+        </div>
+        <div id="globalSearchResults" class="searchDropdown" hidden></div>
+      </div>
+      <span class="demo">BYU EVENTS · STUDENT PROTOTYPE</span
+      ><button id="profileBadge" onclick="location.href = '/settings'">
+        Y
+      </button>
+    </header>
+    <main>
+      <div class="eyebrow">RECOMMENDED FEED</div>
+      <h1>A feed that gets you.</h1>
+      <div class="panel empty">
+        <span class="tag">WIP</span>
+        <h2>Good things are on the way.</h2>
+        <p>Your personalized event feed is a work in progress.</p>
+        <a class="primary" href="/home">Back to Home</a>
+      </div>
+    </main>
+    <nav aria-label="Main navigation">
+      <a href="/home"><span>⌂</span>Home</a
+      ><a href="/calendar"><span>▦</span>Calendar</a
+      ><a class="active" href="/feed"><span>▤</span>Feed</a
+      ><a href="/settings"><span>⚙</span>Settings</a>
+    </nav>
+    <dialog id="detail"></dialog>
+    <div id="toast" role="status"></div>
+    <script src="/js/vendor/supabase.js"></script>
+    <script type="module" src="/js/pages/feed.js"></script>
+  </body>
+</html>

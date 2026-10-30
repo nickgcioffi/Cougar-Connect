@@ -18,6 +18,13 @@ body {
     BlinkMacSystemFont,
     "Segoe UI",
     sans-serif;
+  transition: opacity 160ms ease;
+}
+body.page-loading {
+  opacity: 0;
+}
+body.page-ready {
+  opacity: 1;
 }
 button,
 input,
@@ -47,6 +54,47 @@ button:disabled {
   cursor: not-allowed;
 }
 a {
+  color: var(--blue);
+}
+main a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 14px;
+  border: 1px solid #b9c9e6;
+  border-radius: 9px;
+  background: #f7faff;
+  color: var(--blue);
+  font-weight: 650;
+  line-height: 1.2;
+  text-decoration: none;
+  transition:
+    background 140ms ease,
+    border-color 140ms ease,
+    transform 140ms ease;
+}
+main a:hover {
+  background: #eaf1ff;
+  border-color: var(--blue);
+  transform: translateY(-1px);
+}
+main a.primary {
+  background: var(--blue);
+  border-color: var(--blue);
+  color: white;
+}
+main a.primary:hover {
+  background: #1048b2;
+}
+.banner a {
+  flex: 0 0 auto;
+  background: white;
+  border-color: white;
+  color: var(--navy);
+}
+.banner a:hover {
+  background: #eaf1ff;
   color: var(--blue);
 }
 header {
@@ -371,20 +419,23 @@ nav {
 nav:empty {
   display: none;
 }
-nav button {
+nav a {
   border: 0;
   min-width: 100px;
   background: none;
   color: var(--muted);
   font-size: 13px;
   padding: 7px 14px;
+  text-align: center;
+  text-decoration: none;
+  border-radius: 10px;
 }
-nav button span {
+nav a span {
   display: block;
   font-size: 23px;
   line-height: 1.3;
 }
-nav button.active {
+nav a.active {
   background: #eaf1ff;
   color: var(--blue);
 }
@@ -577,7 +628,7 @@ a:focus-visible {
     padding-bottom: max(8px, env(safe-area-inset-bottom));
     justify-content: space-around;
   }
-  nav button {
+  nav a {
     min-width: 0;
     padding: 8px 10px;
     flex: 1;
