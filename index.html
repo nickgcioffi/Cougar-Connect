@@ -3,55 +3,58 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Cougar Connect · BYU events</title>
-    <meta
-      name="description"
-      content="Find your next opportunity at BYU. A student events prototype."
-    />
-    <link
-      rel="icon"
-      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='10' fill='%23002255'/%3E%3Ctext x='9' y='29' font-size='28' fill='white'%3EY%3C/text%3E%3C/svg%3E"
-    />
-    <link rel="stylesheet" href="css/styles.css" />
+    <title>Sign in · Cougar Connect</title>
+    <link rel="stylesheet" href="/css/styles.css" />
   </head>
-  <body>
-
-  <header>
-    <a class="brand" href="#">
-      <span class="mark">Y</span> cougar<span class="light">connect</span>
-    </a>
-
-    <div id="globalSearch" class="globalSearch" hidden>
-      <div class="searchInputWrap">
-        
-      <span class="searchIcon" aria-hidden="true">
-        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-          <circle cx="11" cy="11" r="7"></circle>
-          <path d="m16 16 4 4"></path>
-        </svg>
-      </span>
-
-        <input
-          class="searchBox"
-          id="search"
-          type="search"
-          aria-label="Search events"
-          placeholder="Search events..."  
-          autocomplete="off"
-        />
+  <body class="page-loading">
+    <header>
+      <a class="brand" href="/"
+        ><span class="mark">Y</span> cougar<span class="light">connect</span></a
+      ><span class="demo">BYU EVENTS · STUDENT PROTOTYPE</span>
+    </header>
+    <main>
+      <div class="setup">
+        <aside class="intro">
+          <div>
+            <div class="eyebrow">YOUR CAMPUS. YOUR NEXT CHAPTER.</div>
+            <h1>Good things<br />happen when<br />you show up.</h1>
+            <p>
+              Discover the people, experiences, and opportunities that make your
+              time at BYU count.
+            </p>
+          </div>
+          <div class="introFoot">
+            A connection today.<br />A possibility for tomorrow.
+          </div>
+        </aside>
+        <section class="formside">
+          <h2 id="authTitle">Welcome to Cougar Connect</h2>
+          <form id="authForm">
+            <label id="emailLabel"
+              >Email<input
+                name="email"
+                type="email"
+                autocomplete="email"
+                required /></label
+            ><label
+              >Password<input
+                name="password"
+                type="password"
+                autocomplete="current-password"
+                minlength="8"
+                required /></label
+            ><button class="primary wide" name="action" value="login">
+              Sign in</button
+            ><button class="wide" name="action" value="signup">
+              Create account
+            </button>
+          </form>
+          <button id="resetPassword">Forgot password</button>
+        </section>
       </div>
-      <div id="globalSearchResults" class="searchDropdown" hidden></div>
-    </div>
-
-    <span class="demo">BYU EVENTS · STUDENT PROTOTYPE</span>
-    <button id="profileBadge" aria-label="Open settings">KC</button>
-  </header>
-
-    <main id="app"></main>
-    <nav id="nav" aria-label="Main navigation"></nav>
-    <dialog id="detail"></dialog>
+    </main>
     <div id="toast" role="status"></div>
-    <script src="js/vendor/supabase.js"></script>
-    <script src="js/app.js"></script>
+    <script src="/js/vendor/supabase.js"></script>
+    <script type="module" src="/js/pages/login.js"></script>
   </body>
 </html>

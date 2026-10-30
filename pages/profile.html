@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Profile · Cougar Connect</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+  </head>
+  <body class="page-loading">
+    <header>
+      <a class="brand" href="/home"
+        ><span class="mark">Y</span> cougar<span class="light">connect</span></a
+      ><span class="demo">PROFILE SETUP</span>
+    </header>
+    <main>
+      <div class="setup">
+        <aside class="intro">
+          <div>
+            <div class="eyebrow">YOUR CAMPUS. YOUR NEXT CHAPTER.</div>
+            <h1>Good things<br />happen when<br />you show up.</h1>
+            <p>Start with a little about you.</p>
+          </div>
+        </aside>
+        <section class="formside">
+          <div class="eyebrow">STEP 01 / 02</div>
+          <h2>Make yourself at home.</h2>
+          <form id="profileForm">
+            <div class="upload">
+              <img
+                class="avatar"
+                id="avatarPreview"
+                alt="Profile photo"
+                hidden
+              /><span class="avatar" id="avatarPlaceholder">＋</span
+              ><label
+                >Profile photo <span class="subtle">(optional)</span
+                ><input id="photo" type="file" accept="image/*"
+              /></label>
+            </div>
+            <label>Full name<input name="name" required maxlength="80" /></label
+            ><label
+              >University<select name="uni">
+                <option>Brigham Young University</option>
+                <option>BYU–Idaho</option>
+                <option>BYU–Hawaii</option>
+                <option>Other</option>
+              </select></label
+            >
+            <div class="row">
+              <label
+                >Study level<select name="level">
+                  <option>Undergraduate</option>
+                  <option>Graduate</option>
+                </select></label
+              ><label
+                >Graduation date<input name="graduation" type="month" required
+              /></label>
+            </div>
+            <label
+              >Primary interest<select
+                id="primaryInterest"
+                name="interest"
+              ></select></label
+            ><label
+              >Bio <span class="subtle">(optional)</span
+              ><textarea name="bio" maxlength="400"></textarea></label
+            ><button class="primary wide">Save profile →</button>
+          </form>
+        </section>
+      </div>
+    </main>
+    <div id="toast" role="status"></div>
+    <script src="/js/vendor/supabase.js"></script>
+    <script type="module" src="/js/pages/profile.js"></script>
+  </body>
+</html>

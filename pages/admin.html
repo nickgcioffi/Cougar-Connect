@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Admin · Cougar Connect</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+  </head>
+  <body class="page-loading">
+    <header>
+      <a class="brand" href="/home"
+        ><span class="mark">Y</span> cougar<span class="light">connect</span></a
+      >
+      <span class="demo">EVENT ADMINISTRATION</span
+      ><button id="profileBadge" onclick="location.href = '/settings'">
+        Y
+      </button>
+    </header>
+    <main>
+      <div class="topline">
+        <h1>Club dashboard</h1>
+        <a href="/settings">Back to settings</a>
+      </div>
+      <p>Create an event for a campus organization.</p>
+      <div id="noOrganizations" class="panel empty" hidden>
+        No organizations were found in Supabase.
+      </div>
+      <form id="eventForm" class="panel">
+        <div class="row">
+          <label
+            >Hosting organization<select
+              id="organization"
+              name="orgID"
+              required
+            ></select></label
+          ><label>Event name<input name="name" required /></label
+          ><label>Genre<select id="genre" name="genre"></select></label
+          ><label
+            >Event type<select name="type">
+              <option>Professional</option>
+              <option>Social</option>
+            </select></label
+          ><label>Date<input name="date" type="date" required /></label
+          ><label>Time<input name="time" type="time" required /></label>
+        </div>
+        <label>Location<input name="location" required /></label
+        ><label>Description<textarea name="desc" required></textarea></label
+        ><button class="primary">Create event</button>
+      </form>
+      <h2>All events</h2>
+      <div id="adminEvents"></div>
+    </main>
+    <div id="toast" role="status"></div>
+    <script src="/js/vendor/supabase.js"></script>
+    <script type="module" src="/js/pages/admin.js"></script>
+  </body>
+</html>

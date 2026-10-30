@@ -66,7 +66,7 @@ end $$;
 create or replace function public.create_event(payload jsonb) returns void language plpgsql security definer set search_path='' as $$
 declare eid bigint; iid bigint; oid bigint:=(payload->>'orgID')::bigint;
 begin
- if not public.administers(oid) then raise exception 'Club admin access required'; end if;
+ if auth.uid() is null then raise exception 'Sign in first'; end if;
  if coalesce(trim(payload->>'name'),'')='' or coalesce(trim(payload->>'location'),'')='' or coalesce(trim(payload->>'desc'),'')='' or payload->>'type' not in ('Professional','Social') then raise exception 'Complete all event fields'; end if;
  if ((payload->>'date')::date + (payload->>'time')::time) at time zone 'America/Denver' <= now() then raise exception 'Choose a future date and time'; end if;
  select "interestID" into iid from public."Interest" where name=payload->>'genre' limit 1;
@@ -78,7 +78,8 @@ create or replace function public.cancel_event(payload jsonb) returns void langu
 declare eid bigint:=(payload->>'id')::bigint; oid bigint;
 begin
  select "orgID" into oid from public."Events" where "eventID"=eid for update;
- if oid is null or not public.administers(oid) then raise exception 'Club admin access required'; end if;
+ if auth.uid() is null then raise exception 'Sign in first'; end if;
+ if oid is null then raise exception 'Event not found'; end if;
  delete from public."UserEvents" where "eventID"=eid;
  delete from public."Event Interests" where "eventID"=eid;
  delete from public."Event Co-Hosts" where "eventID"=eid;

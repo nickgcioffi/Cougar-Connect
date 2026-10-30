@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Settings · Cougar Connect</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+  </head>
+  <body class="page-loading">
+    <header>
+      <a class="brand" href="/home"
+        ><span class="mark">Y</span> cougar<span class="light">connect</span></a
+      >
+      <div id="globalSearch" class="globalSearch">
+        <div class="searchInputWrap">
+          <span class="searchIcon" aria-hidden="true">⌕</span
+          ><input
+            class="searchBox"
+            id="search"
+            type="search"
+            aria-label="Search events"
+            placeholder="Search events..."
+            autocomplete="off"
+          />
+        </div>
+        <div id="globalSearchResults" class="searchDropdown" hidden></div>
+      </div>
+      <span class="demo">BYU EVENTS · STUDENT PROTOTYPE</span
+      ><button id="profileBadge">Y</button>
+    </header>
+    <main>
+      <div class="settings">
+        <div class="eyebrow">MAKE IT YOURS</div>
+        <h1>Settings</h1>
+        <div class="panel">
+          <h2 id="profileName"></h2>
+          <p id="profileDetails"></p>
+          <p id="profileBio"></p>
+          <a href="/profile">Edit profile</a>
+          <a href="/interests">Edit interests</a>
+        </div>
+        <div class="panel">
+          <h2>App preferences</h2>
+          <label class="setting"
+            >Open at launch<select id="launchPreference">
+              <option>Home</option>
+              <option>Calendar</option>
+              <option>Feed</option>
+              <option>Settings</option>
+            </select></label
+          >
+        </div>
+        <div class="panel">
+          <h2>Club administration</h2>
+          <p>Manage campus events during development.</p>
+          <a href="/admin">Open dashboard →</a>
+        </div>
+        <div class="panel">
+          <h2>Account</h2>
+          <button id="resetPassword">Reset password</button>
+          <button id="signOut">Sign out</button>
+        </div>
+      </div>
+    </main>
+    <nav aria-label="Main navigation">
+      <a href="/home"><span>⌂</span>Home</a
+      ><a href="/calendar"><span>▦</span>Calendar</a
+      ><a href="/feed"><span>▤</span>Feed</a
+      ><a class="active" href="/settings"><span>⚙</span>Settings</a>
+    </nav>
+    <dialog id="detail"></dialog>
+    <div id="toast" role="status"></div>
+    <script src="/js/vendor/supabase.js"></script>
+    <script type="module" src="/js/pages/settings.js"></script>
+  </body>
+</html>

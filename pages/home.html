@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Home · Cougar Connect</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+  </head>
+  <body class="page-loading">
+    <header>
+      <a class="brand" href="/home"
+        ><span class="mark">Y</span> cougar<span class="light">connect</span></a
+      >
+      <div id="globalSearch" class="globalSearch">
+        <div class="searchInputWrap">
+          <span class="searchIcon" aria-hidden="true">⌕</span
+          ><input
+            class="searchBox"
+            id="search"
+            type="search"
+            aria-label="Search events"
+            placeholder="Search events..."
+            autocomplete="off"
+          />
+        </div>
+        <div id="globalSearchResults" class="searchDropdown" hidden></div>
+      </div>
+      <span class="demo">BYU EVENTS · STUDENT PROTOTYPE</span
+      ><button id="profileBadge" onclick="location.href = '/settings'">
+        Y
+      </button>
+    </header>
+    <main>
+      <div class="welcome topline">
+        <div>
+          <div class="eyebrow">MAKE ROOM FOR WHAT’S NEXT</div>
+          <h1>Hey, <span id="firstName">there</span>.</h1>
+          <p>Your next connection could be just around campus.</p>
+        </div>
+      </div>
+      <div class="banner">
+        <div>
+          <div class="eyebrow" style="color: #a6c6ff">
+            A LITTLE EXPLORING GOES A LONG WAY
+          </div>
+          <h2>Find something worth showing up for.</h2>
+          <p>Build your résumé. Meet your people. Try something new.</p>
+        </div>
+        <a href="/calendar">Explore calendar ↗</a>
+      </div>
+      <div class="topline">
+        <h2>On your radar <span id="savedCount" class="subtle"></span></h2>
+        <a href="/calendar">View calendar</a>
+      </div>
+      <div id="savedEvents"></div>
+      <h2>Picked for your interests</h2>
+      <div id="recommendedEvents"></div>
+    </main>
+    <nav aria-label="Main navigation">
+      <a class="active" href="/home"><span>⌂</span>Home</a
+      ><a href="/calendar"><span>▦</span>Calendar</a
+      ><a href="/feed"><span>▤</span>Feed</a
+      ><a href="/settings"><span>⚙</span>Settings</a>
+    </nav>
+    <dialog id="detail"></dialog>
+    <div id="toast" role="status"></div>
+    <script src="/js/vendor/supabase.js"></script>
+    <script type="module" src="/js/pages/home.js"></script>
+  </body>
+</html>
