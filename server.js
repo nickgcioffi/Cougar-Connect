@@ -131,6 +131,7 @@ const pages = {
   "/calendar": "pages/calendar.html",
   "/feed": "pages/feed.html",
   "/settings": "pages/settings.html",
+  "/admin-login": "pages/admin-login.html",
   "/admin": "pages/admin.html",
 };
 for (const [route, page] of Object.entries(pages)) {
