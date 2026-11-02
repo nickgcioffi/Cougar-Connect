@@ -20,8 +20,12 @@ body {
     sans-serif;
   transition: opacity 160ms ease;
 }
-body.page-loading {
+body.page-loading main {
   opacity: 0;
+}
+body.page-ready main {
+  opacity: 1;
+  transition: opacity 160ms ease;
 }
 body.page-ready {
   opacity: 1;
