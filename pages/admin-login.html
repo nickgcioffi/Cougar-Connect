@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Admin Login · Cougar Connect</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+  </head>
+  <body>
+    <header>
+      <a class="brand" href="/">
+        <span class="mark">Y</span> cougar<span class="light">connect</span>
+      </a>
+      <span class="demo">ADMINISTRATION</span>
+    </header>
+
+    <main>
+      <section class="formside">
+        <h2>Admin Portal</h2>
+        <p>Sign in with your Cougar Connect administrator account.</p>
+
+        <form id="adminLoginForm">
+          <label>
+            Email
+            <input name="email" type="email" autocomplete="email" required />
+          </label>
+
+          <label>
+            Password
+            <input
+              name="password"
+              type="password"
+              autocomplete="current-password"
+              required
+            />
+          </label>
+
+          <button class="primary wide" type="submit">Sign in as Admin</button>
+        </form>
+
+        <a href="/" class="wide">Back to student login</a>
+      </section>
+    </main>
+
+    <div id="toast" role="status"></div>
+    <script src="/js/vendor/supabase.js"></script>
+  </body>
+</html>
