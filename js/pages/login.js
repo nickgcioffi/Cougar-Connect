@@ -9,7 +9,8 @@ supabase.auth.onAuthStateChange((event) => {
     recoveryMode = true;
     document.querySelector("#authTitle").textContent = "Choose a new password";
     document.querySelector("#emailLabel").hidden = true;
-    document.querySelector('[value="signup"]').hidden = true;
+    const createAccount = document.querySelector("#createAccount");
+    if (createAccount) createAccount.hidden = true;
     document.querySelector('[value="login"]').textContent = "Update password";
   }
 });
@@ -41,7 +42,11 @@ document
     }
   });
 
-document.querySelector("#resetPassword").onclick = async () => {
+document.querySelector("#createAccount")?.addEventListener("click", () => {
+  window.location.assign("/signup");
+});
+
+document.querySelector("#resetPassword")?.addEventListener("click", async () => {
   const email = document.querySelector('[name="email"]');
   if (!email.checkValidity())
     return showToast("Enter a valid email address first.");
@@ -49,4 +54,4 @@ document.querySelector("#resetPassword").onclick = async () => {
     redirectTo: location.origin,
   });
   showToast(error ? error.message : "Check your email for a reset link.");
-};
+});

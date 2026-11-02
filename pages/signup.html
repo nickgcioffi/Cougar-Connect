@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Create account · Cougar Connect</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+  </head>
+  <body class="page-loading">
+    <header>
+      <a class="brand" href="/"
+        ><span class="mark">Y</span> cougar<span class="light">connect</span></a
+      ><span class="demo">BYU EVENTS · STUDENT PROTOTYPE</span>
+    </header>
+    <main>
+      <div class="setup">
+        <aside class="intro">
+          <div>
+            <div class="eyebrow">YOUR CAMPUS. YOUR NEXT CHAPTER.</div>
+            <h1>Good things<br />happen when<br />you show up.</h1>
+            <p>
+              Discover the people, experiences, and opportunities that make your
+              time at BYU count.
+            </p>
+          </div>
+          <div class="introFoot">
+            A connection today.<br />A possibility for tomorrow.
+          </div>
+        </aside>
+        <section class="formside">
+          <h2 id="authTitle">Create your account</h2>
+          <form id="authForm">
+            <label id="emailLabel"
+              >Email<input
+                name="email"
+                type="email"
+                autocomplete="email"
+                required /></label
+            ><label
+              >Password<input
+                name="password"
+                type="password"
+                autocomplete="new-password"
+                minlength="8"
+                required /></label
+            ><button type="submit" class="primary wide" name="action" value="signup">
+              Create account
+            </button>
+            <a class="wide" href="/" style="text-align: center;">Back to sign in</a>
+          </form>
+        </section>
+      </div>
+    </main>
+    <div id="toast" role="status"></div>
+    <script src="/js/vendor/supabase.js"></script>
+    <script type="module" src="/js/pages/login.js"></script>
+  </body>
+</html>
