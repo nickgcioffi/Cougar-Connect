@@ -45,14 +45,23 @@ test("Express serves the app and rejects unauthenticated database requests", asy
     for (const path of ["/home", "/calendar", "/feed", "/settings", "/admin"]) {
       const response = await fetch(base + path);
       assert.equal(response.status, 200);
-      assert.match(await response.text(), /js\/pages\//);
+      const html = await response.text();
+      assert.match(html, /js\/pages\//);
+      if (path === "/settings") {
+        assert.match(html, /id="openDeleteAccount"/);
+        assert.match(html, /id="deleteAccountDialog"/);
+        assert.match(html, /id="confirmDeleteAccount"/);
+      }
     }
     const config = await (await fetch(base + "/api/config")).json();
     assert.match(config.url, /^https:\/\//);
     assert.ok(config.key);
+    assert.equal(config.secretKey, undefined);
+    assert.equal(config.serviceRoleKey, undefined);
     for (const [path, method] of [
       ["state", "GET"],
       ["action", "POST"],
+      ["account/delete", "POST"],
     ]) {
       const response = await fetch(base + "/api/" + path, { method });
       assert.equal(response.status, 401);

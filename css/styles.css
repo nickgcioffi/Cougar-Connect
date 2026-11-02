@@ -518,6 +518,42 @@ nav a.active {
 .setting input {
   width: 20px;
 }
+.dangerZone {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-top: 28px;
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
+}
+.dangerZone h3 {
+  margin: 0 0 4px;
+}
+.dangerZone p {
+  margin: 0;
+}
+button.dangerOutline {
+  flex: 0 0 auto;
+  border-color: #c83232;
+  color: #a91f1f;
+}
+button.dangerOutline:hover {
+  background: #fff1f1;
+  border-color: #a91f1f;
+  color: #861717;
+}
+button.dangerPrimary {
+  border-color: #b42323;
+  background: #b42323;
+  color: white;
+  font-weight: 750;
+}
+button.dangerPrimary:hover {
+  border-color: #8f1717;
+  background: #8f1717;
+  color: white;
+}
 dialog {
   border: 0;
   border-radius: 20px;
@@ -533,6 +569,12 @@ dialog .actions {
   display: grid;
   gap: 10px;
   margin-top: 24px;
+}
+@media (max-width: 560px) {
+  .dangerZone {
+    align-items: stretch;
+    flex-direction: column;
+  }
 }
 .close {
   float: right;
