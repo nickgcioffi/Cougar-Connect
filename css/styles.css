@@ -267,6 +267,10 @@ textarea {
 .wide {
   width: 100%;
 }
+#authForm > .wide + .wide,
+#authForm + #resetPassword {
+  margin-top: 12px;
+}
 .subtle {
   font-size: 13px;
   color: var(--muted);
