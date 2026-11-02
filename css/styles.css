@@ -125,14 +125,11 @@ header {
   margin-left: -9px;
 }
 .mark {
-  display: grid;
-  place-items: center;
-  background: var(--navy);
-  color: white;
-  width: 40px;
+  display: block;
+  flex-shrink: 0;
+  width: auto;
   height: 40px;
-  border-radius: 50%;
-  font: italic bold 30px Georgia;
+  object-fit: contain;
 }
 .demo {
   font-size: 12px;
@@ -266,6 +263,10 @@ textarea {
 }
 .wide {
   width: 100%;
+}
+#authForm > .wide + .wide,
+#authForm + #resetPassword {
+  margin-top: 12px;
 }
 .subtle {
   font-size: 13px;
