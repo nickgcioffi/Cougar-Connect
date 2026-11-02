@@ -1,5 +1,5 @@
 import { nextSetupPage, requireAccount } from "../shared/auth.js";
-import { runAction } from "../shared/api.js";
+import { apiRequest, runAction } from "../shared/api.js";
 import { revealPage, setAccountBadge, showToast } from "../shared/ui.js";
 import { initializeSearch } from "../shared/search.js";
 
@@ -34,5 +34,24 @@ document.querySelector("#resetPassword").onclick = async () => {
 document.querySelector("#signOut").onclick = async () => {
   await supabase.auth.signOut();
   window.location.assign("/");
+};
+const deleteAccountDialog = document.querySelector("#deleteAccountDialog");
+const confirmDeleteAccount = document.querySelector("#confirmDeleteAccount");
+document.querySelector("#openDeleteAccount").onclick = () =>
+  deleteAccountDialog.showModal();
+document.querySelector("#cancelDeleteAccount").onclick = () =>
+  deleteAccountDialog.close();
+confirmDeleteAccount.onclick = async () => {
+  confirmDeleteAccount.disabled = true;
+  confirmDeleteAccount.textContent = "Deleting account…";
+  try {
+    await apiRequest("account/delete", {});
+    await supabase.auth.signOut();
+    window.location.assign("/");
+  } catch (error) {
+    confirmDeleteAccount.disabled = false;
+    confirmDeleteAccount.textContent = "Yes, delete my account";
+    showToast(error.message);
+  }
 };
 revealPage();

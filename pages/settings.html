@@ -59,6 +59,17 @@
           <h2>Account</h2>
           <button id="resetPassword">Reset password</button>
           <button id="signOut">Sign out</button>
+          <div class="dangerZone">
+            <div>
+              <h3>Delete account</h3>
+              <p>
+                Permanently remove your profile, interests, and saved events.
+              </p>
+            </div>
+            <button id="openDeleteAccount" class="dangerOutline">
+              Delete account
+            </button>
+          </div>
         </div>
       </div>
     </main>
@@ -68,7 +79,19 @@
       ><a href="/feed"><span>▤</span>Feed</a
       ><a class="active" href="/settings"><span>⚙</span>Settings</a>
     </nav>
-    <dialog id="detail"></dialog>
+    <dialog id="deleteAccountDialog" aria-labelledby="deleteAccountTitle">
+      <h2 id="deleteAccountTitle">Are you sure?</h2>
+      <p>
+        This permanently deletes your Cougar Connect account and all of its
+        data. This action cannot be undone.
+      </p>
+      <div class="actions">
+        <button id="confirmDeleteAccount" class="dangerPrimary">
+          Yes, delete my account
+        </button>
+        <button id="cancelDeleteAccount">Cancel</button>
+      </div>
+    </dialog>
     <div id="toast" role="status"></div>
     <script src="/js/vendor/supabase.js"></script>
     <script type="module" src="/js/pages/settings.js"></script>

@@ -17,6 +17,17 @@ const url =
 const key =
   process.env.SUPABASE_PUBLISHABLE_KEY ||
   "sb_publishable_HPk1MkktUxhDvtRp8tS1OA_i-YCp2cD";
+const secretKey =
+  process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+const adminDb = secretKey
+  ? createClient(url, secretKey, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false,
+      },
+    })
+  : null;
 app.disable("x-powered-by");
 app.use(express.json({ limit: "32kb" }));
 app.get("/api/config", (req, res) => res.json({ url, key }));
@@ -114,6 +125,53 @@ app.post("/api/action", async (req, res, next) => {
     if (!functions[action])
       return res.status(400).json({ error: "Unknown action." });
     check(await req.db.rpc(functions[action], { payload }));
+    res.json({ ok: true });
+  } catch (error) {
+    next(error);
+  }
+});
+async function listStorageFiles(bucket, folder) {
+  const paths = [];
+  for (let offset = 0; ; offset += 1000) {
+    const { data, error } = await adminDb.storage.from(bucket).list(folder, {
+      limit: 1000,
+      offset,
+      sortBy: { column: "name", order: "asc" },
+    });
+    if (error) throw error;
+    for (const entry of data) {
+      const path = `${folder}/${entry.name}`;
+      if (entry.id === null)
+        paths.push(...(await listStorageFiles(bucket, path)));
+      else paths.push(path);
+    }
+    if (data.length < 1000) return paths;
+  }
+}
+app.post("/api/account/delete", async (req, res, next) => {
+  try {
+    if (!adminDb)
+      return res.status(503).json({
+        error: "Account deletion is not configured on this server.",
+      });
+
+    const bucket = "profile-photos";
+    const files = await listStorageFiles(bucket, req.user.id);
+    for (let index = 0; index < files.length; index += 1000) {
+      check(
+        await adminDb.storage
+          .from(bucket)
+          .remove(files.slice(index, index + 1000)),
+      );
+    }
+
+    check(
+      await adminDb.rpc("purge_account_data", {
+        target_auth_user_id: req.user.id,
+      }),
+    );
+    const { error } = await adminDb.auth.admin.deleteUser(req.user.id);
+    if (error) throw error;
     res.json({ ok: true });
   } catch (error) {
     next(error);
