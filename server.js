@@ -198,6 +198,7 @@ for (const [route, page] of Object.entries(pages)) {
 }
 app.use("/js", express.static(root + "js"));
 app.use("/css", express.static(root + "css"));
+app.use("/assets", express.static(root + "assets"));
 app.use((error, req, res, next) => {
   console.error(error.message);
   res

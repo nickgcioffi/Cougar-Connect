@@ -15,6 +15,9 @@ test("Express serves the app and rejects unauthenticated database requests", asy
   await cp(join(source, "pages"), join(fixture, "pages"), { recursive: true });
   await cp(join(source, "js"), join(fixture, "js"), { recursive: true });
   await cp(join(source, "css"), join(fixture, "css"), { recursive: true });
+  await cp(join(source, "assets"), join(fixture, "assets"), {
+    recursive: true,
+  });
   await symlink(
     join(source, "node_modules"),
     join(fixture, "node_modules"),
@@ -53,6 +56,13 @@ test("Express serves the app and rejects unauthenticated database requests", asy
         assert.match(html, /id="confirmDeleteAccount"/);
       }
     }
+    const logo = await fetch(base + "/assets/byu-logo.png");
+    assert.equal(logo.status, 200);
+    assert.match(logo.headers.get("content-type"), /image\/png/);
+    assert.deepEqual(
+      [...new Uint8Array(await logo.arrayBuffer()).slice(0, 8)],
+      [137, 80, 78, 71, 13, 10, 26, 10],
+    );
     const config = await (await fetch(base + "/api/config")).json();
     assert.match(config.url, /^https:\/\//);
     assert.ok(config.key);
