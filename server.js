@@ -182,6 +182,7 @@ app.get("/healthz", (req, res) => {
   res.json({ ok: true, revision });
 });
 const pages = {
+  "/signup": "pages/signup.html",
   "/": "index.html",
   "/profile": "pages/profile.html",
   "/interests": "pages/interests.html",
