@@ -61,7 +61,7 @@ function renderCalendar() {
         .filter((event) => event.date === date)
         .map(
           (event) =>
-            `<button class="calEvent" data-event-id="${event.id}">${escapeHtml(event.name)}</button>`,
+            `<button class="calEvent" data-event-id="${event.id}">${event.external ? "External · " : ""}${escapeHtml(event.name)}</button>`,
         )
         .join("");
       return `<div class="day">${day}${buttons}</div>`;
