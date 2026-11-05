@@ -44,7 +44,18 @@ test("Express serves the app and rejects unauthenticated database requests", asy
     const base = "http://localhost:3107";
     const page = await fetch(base);
     assert.equal(page.status, 200);
-    assert.match(await page.text(), /js\/vendor\/supabase.js/);
+    const landing = await page.text();
+    assert.match(landing, /class="landing-page"/);
+    assert.match(landing, /href="\/login"/);
+    assert.match(landing, /href="\/signup"/);
+    assert.doesNotMatch(landing, /js\/vendor\/supabase\.js/);
+    for (const path of ["/login", "/signup"]) {
+      const response = await fetch(base + path);
+      assert.equal(response.status, 200);
+      const html = await response.text();
+      assert.match(html, /src="\/js\/vendor\/supabase\.js"/);
+      assert.match(html, /src="\/js\/pages\/login\.js"/);
+    }
     for (const path of ["/home", "/calendar", "/feed", "/settings", "/admin"]) {
       const response = await fetch(base + path);
       assert.equal(response.status, 200);
