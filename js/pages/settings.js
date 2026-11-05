@@ -33,7 +33,7 @@ document.querySelector("#resetPassword").onclick = async () => {
 };
 document.querySelector("#signOut").onclick = async () => {
   await supabase.auth.signOut();
-  window.location.assign("/");
+  window.location.assign("/login");
 };
 const deleteAccountDialog = document.querySelector("#deleteAccountDialog");
 const confirmDeleteAccount = document.querySelector("#confirmDeleteAccount");

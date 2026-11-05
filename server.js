@@ -71,6 +71,14 @@ app.get("/api/state", async (req, res, next) => {
     ]);
     const [profile, interests, events, chosen, saved, admins, organizations] =
       results.map(check);
+    let externalEvents = [];
+    try {
+      externalEvents = JSON.parse(
+        readFileSync(root + "data/byu-clubs-events.json", "utf8"),
+      );
+    } catch (error) {
+      if (error.code !== "ENOENT") throw error;
+    }
     res.json({
       profile: profile && {
         name: `${profile.firstName} ${profile.lastName}`,
@@ -93,19 +101,40 @@ app.get("/api/state", async (req, res, next) => {
         id: x.orgID,
         name: x.orgName,
       })),
-      events: events.map((e) => ({
-        id: e.eventID,
-        name: e.name,
-        org: e.Organization.orgName,
-        orgID: e.orgID,
-        genres: e["Event Interests"].map((x) => x.Interest.name),
-        genre: e["Event Interests"][0]?.Interest.name || "",
-        type: e.type,
-        time: e.time,
-        date: e.date,
-        location: e.location,
-        desc: e.description || "",
-      })),
+      events: events
+        .map((e) => ({
+          id: e.eventID,
+          name: e.name,
+          org: e.Organization.orgName,
+          orgID: e.orgID,
+          genres: e["Event Interests"].map((x) => x.Interest.name),
+          genre: e["Event Interests"][0]?.Interest.name || "",
+          type: e.type,
+          time: e.time,
+          date: e.date,
+          location: e.location,
+          desc: e.description || "",
+        }))
+        .concat(
+          externalEvents.map((e) => ({
+            id: e.id,
+            name: e.title,
+            org: e.organization || "BYU Clubs",
+            orgID: null,
+            genres: [],
+            genre: "External event",
+            type: "External",
+            time: e.startTime,
+            endTime: e.endTime,
+            date: e.date,
+            location: e.location || "Location not provided",
+            desc: e.description || "",
+            external: true,
+            source: "BYU Clubs",
+            sourceUrl: e.sourceUrl,
+            sourceKey: e.sourceKey,
+          })),
+        ),
     });
   } catch (error) {
     next(error);
@@ -183,6 +212,10 @@ app.get("/healthz", (req, res) => {
 });
 const pages = {
   "/signup": "pages/signup.html",
+  "/login": "pages/login.html",
+  "/signin": "pages/login.html",
+  "/about": "pages/about.html",
+  "/request-organization-access": "pages/request-organization-access.html",
   "/": "index.html",
   "/profile": "pages/profile.html",
   "/interests": "pages/interests.html",

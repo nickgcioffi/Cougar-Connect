@@ -2,7 +2,7 @@ import { runAction } from "./api.js";
 import { $, escapeHtml, eventDate, eventTime, showToast } from "./ui.js";
 
 export function eventCard(event, saved) {
-  return `<button class="card" data-event-id="${event.id}"><div class="cardTop"><span class="date">${eventDate(event).split(" ")[0].toUpperCase()}<strong>${Number(event.date.slice(-2))}</strong></span><span class="eventIcon">↗</span></div><div class="cardBody"><span class="tag">${escapeHtml(event.genre)}</span><h3>${escapeHtml(event.name)}</h3><p>${eventTime(event)} · ${escapeHtml(event.location)}</p><div class="cardFoot">${escapeHtml(event.org)} <span style="float:right">${saved ? "♥ Saved" : "♡"}</span></div></div></button>`;
+  return `<button class="card" data-event-id="${event.id}"><div class="cardTop"><span class="date">${eventDate(event).split(" ")[0].toUpperCase()}<strong>${Number(event.date.slice(-2))}</strong></span><span class="eventIcon">↗</span></div><div class="cardBody"><span class="tag">${escapeHtml(event.external ? "External · BYU Clubs" : event.genre)}</span><h3>${escapeHtml(event.name)}</h3><p>${eventTime(event)} · ${escapeHtml(event.location)}</p><div class="cardFoot">${escapeHtml(event.org)} <span style="float:right">${saved ? "♥ Saved" : "♡"}</span></div></div></button>`;
 }
 
 export function eventCards(events, savedIds) {
@@ -23,21 +23,27 @@ export function openEvent(account, id, onChange) {
   if (!event) return;
   const saved = account.saved.includes(id);
   const dialog = $("#detail");
-  dialog.innerHTML = `<button class="close" id="closeDetail" aria-label="Close event details">✕</button><span class="tag">${escapeHtml(event.genre)}</span><h1 style="font-size:30px;margin-top:22px">${escapeHtml(event.name)}</h1><p>${eventDate(event)}, ${eventTime(event)}<br>${escapeHtml(event.location)}<br>Hosted by ${escapeHtml(event.org)}</p><p>${escapeHtml(event.desc)}</p><div class="actions"><button class="primary" id="saveEvent">${saved ? "♥ Saved · remove from upcoming" : "♡ Like & add to upcoming"}</button><button id="googleCalendar">Add to Google Calendar ↗</button><button id="shareEvent">Share event</button></div>`;
+  const endTime = event.endTime
+    ? eventTime({ date: event.date, time: event.endTime })
+    : "";
+  dialog.innerHTML = `<button class="close" id="closeDetail" aria-label="Close event details">✕</button><span class="tag">${escapeHtml(event.external ? "External · BYU Clubs" : event.genre)}</span><h1 style="font-size:30px;margin-top:22px">${escapeHtml(event.name)}</h1><p>${eventDate(event)}, ${eventTime(event)}${endTime ? `–${endTime}` : ""}<br>${escapeHtml(event.location)}<br>Hosted by ${escapeHtml(event.org)}</p><p>${escapeHtml(event.desc)}</p>${event.external ? `<p><a href="${escapeHtml(event.sourceUrl)}" target="_blank" rel="noopener noreferrer">View on BYU Clubs ↗</a></p>` : ""}<div class="actions">${event.external ? "" : `<button class="primary" id="saveEvent">${saved ? "♥ Saved · remove from upcoming" : "♡ Like & add to upcoming"}</button>`}<button id="googleCalendar">Add to Google Calendar ↗</button><button id="shareEvent">Share event</button></div>`;
   dialog.showModal();
   $("#closeDetail").onclick = () => dialog.close();
-  $("#saveEvent").onclick = async () => {
-    try {
-      await runAction("save", { id, saved: !saved });
-      dialog.close();
-      await onChange();
-    } catch (error) {
-      showToast(error.message);
-    }
-  };
+  if (!event.external)
+    $("#saveEvent").onclick = async () => {
+      try {
+        await runAction("save", { id, saved: !saved });
+        dialog.close();
+        await onChange();
+      } catch (error) {
+        showToast(error.message);
+      }
+    };
   $("#googleCalendar").onclick = () => {
     const start = new Date(`${event.date}T${event.time}`);
-    const end = new Date(start.getTime() + 3600000);
+    const end = event.endTime
+      ? new Date(`${event.date}T${event.endTime}`)
+      : new Date(start.getTime() + 3600000);
     const stamp = (date) =>
       date
         .toISOString()
