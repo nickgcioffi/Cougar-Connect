@@ -20,9 +20,8 @@ if (editing) {
   section.querySelector(".eyebrow").remove();
   document.querySelector("#interestsHeading").textContent = "Edit interests";
   saveButton.textContent = "Save changes";
-  const backLink = document.querySelector("#interestsBack");
-  backLink.href = "/settings";
-  backLink.textContent = "Cancel";
+  document.querySelector("#interestsBack").remove();
+  document.querySelector("#cancelEdit").hidden = false;
 }
 
 function renderChoices() {
