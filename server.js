@@ -79,7 +79,6 @@ app.get("/api/state", async (req, res, next) => {
         graduation: profile.gradDate.slice(0, 7),
         bio: profile.biography,
         photo: profile.photoURL,
-        interest: profile.primaryInterest,
       },
       launch: profile?.launchPreference || "Home",
       interests: chosen.map((x) => x.Interest.name),

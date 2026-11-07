@@ -49,8 +49,6 @@ form.onsubmit = async (event) => {
   event.preventDefault();
   const profile = Object.fromEntries(new FormData(form));
   profile.photo = account.profile?.photo || null;
-  // Keep any legacy value when saving through the existing profile RPC.
-  profile.interest = account.profile?.interest ?? null;
   try {
     const file = document.querySelector("#photo").files[0];
     if (file) {
