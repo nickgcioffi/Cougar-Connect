@@ -92,12 +92,22 @@
         This permanently deletes your Cougar Connect account and all of its
         data. This action cannot be undone.
       </p>
-      <div class="actions">
-        <button id="confirmDeleteAccount" class="dangerPrimary">
-          Yes, delete my account
-        </button>
-        <button id="cancelDeleteAccount">Cancel</button>
-      </div>
+      <form id="deleteAccountForm">
+        <label for="deleteAccountPassword">Enter your current password to confirm</label>
+        <input
+          id="deleteAccountPassword"
+          type="password"
+          autocomplete="current-password"
+          required
+        />
+        <div class="actions">
+          <button id="confirmDeleteAccount" class="dangerPrimary">
+            Yes, delete my account
+          </button>
+          <button id="cancelDeleteAccount" type="button">Cancel</button>
+        </div>
+        <p id="deleteAccountError" role="alert" hidden></p>
+      </form>
     </dialog>
     <div id="toast" role="status"></div>
     <script src="/js/vendor/supabase.js"></script>
