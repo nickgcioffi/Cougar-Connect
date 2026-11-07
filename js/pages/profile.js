@@ -25,12 +25,21 @@ if (setupPage) {
   document.querySelector("#cancelEdit").hidden = false;
 }
 
+const [year = "", month = ""] = (account.profile?.graduation || "").split("-");
+const yearSelect = form.elements.graduationYear;
+const currentYear = new Date().getFullYear();
+const years = new Set(
+  Array.from({ length: 16 }, (_, index) => String(currentYear - 5 + index)),
+);
+if (year) years.add(year);
+for (const option of [...years].sort())
+  yearSelect.add(new Option(option, option));
+yearSelect.value = year;
+form.elements.graduationMonth.value = month;
+
 if (account.profile) {
   for (const field of ["name", "uni", "level", "bio"])
     form.elements[field].value = account.profile[field] || "";
-  const [year = "", month = ""] = (account.profile.graduation || "").split("-");
-  form.elements.graduationYear.value = year;
-  form.elements.graduationMonth.value = month;
   if (account.profile.photo) {
     document.querySelector("#avatarPreview").src = account.profile.photo;
     document.querySelector("#avatarPreview").hidden = false;

@@ -61,35 +61,60 @@
             >
             <fieldset class="graduation-date">
               <legend>Graduation date</legend>
-              <div class="row">
-                <label
-                  >Month<select name="graduationMonth" required>
-                    <option value="">Select month</option>
-                    <option value="01">January</option>
-                    <option value="02">February</option>
-                    <option value="03">March</option>
-                    <option value="04">April</option>
-                    <option value="05">May</option>
-                    <option value="06">June</option>
-                    <option value="07">July</option>
-                    <option value="08">August</option>
-                    <option value="09">September</option>
-                    <option value="10">October</option>
-                    <option value="11">November</option>
-                    <option value="12">December</option>
-                  </select></label
-                >
-                <label
-                  >Year<input
-                    name="graduationYear"
-                    type="text"
-                    inputmode="numeric"
-                    pattern="(?!0000)[0-9]{4}"
-                    maxlength="4"
-                    placeholder="e.g. 2027"
-                    title="Enter a four-digit year, such as 2027"
-                    required
-                /></label>
+              <label>
+                <select name="graduationYear" aria-label="Graduation year" required>
+                  <option value="">Select year</option>
+                </select>
+              </label>
+              <div class="graduation-months" role="group" aria-label="Month">
+                <label class="graduation-month">
+                  <input type="radio" name="graduationMonth" value="01" aria-label="January" required />
+                  <span>Jan</span>
+                </label>
+                <label class="graduation-month">
+                  <input type="radio" name="graduationMonth" value="02" aria-label="February" required />
+                  <span>Feb</span>
+                </label>
+                <label class="graduation-month">
+                  <input type="radio" name="graduationMonth" value="03" aria-label="March" required />
+                  <span>Mar</span>
+                </label>
+                <label class="graduation-month">
+                  <input type="radio" name="graduationMonth" value="04" aria-label="April" required />
+                  <span>Apr</span>
+                </label>
+                <label class="graduation-month">
+                  <input type="radio" name="graduationMonth" value="05" aria-label="May" required />
+                  <span>May</span>
+                </label>
+                <label class="graduation-month">
+                  <input type="radio" name="graduationMonth" value="06" aria-label="June" required />
+                  <span>Jun</span>
+                </label>
+                <label class="graduation-month">
+                  <input type="radio" name="graduationMonth" value="07" aria-label="July" required />
+                  <span>Jul</span>
+                </label>
+                <label class="graduation-month">
+                  <input type="radio" name="graduationMonth" value="08" aria-label="August" required />
+                  <span>Aug</span>
+                </label>
+                <label class="graduation-month">
+                  <input type="radio" name="graduationMonth" value="09" aria-label="September" required />
+                  <span>Sep</span>
+                </label>
+                <label class="graduation-month">
+                  <input type="radio" name="graduationMonth" value="10" aria-label="October" required />
+                  <span>Oct</span>
+                </label>
+                <label class="graduation-month">
+                  <input type="radio" name="graduationMonth" value="11" aria-label="November" required />
+                  <span>Nov</span>
+                </label>
+                <label class="graduation-month">
+                  <input type="radio" name="graduationMonth" value="12" aria-label="December" required />
+                  <span>Dec</span>
+                </label>
               </div>
             </fieldset>
             <label
