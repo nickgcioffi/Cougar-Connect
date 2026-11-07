@@ -1,4 +1,4 @@
-import { requireAccount } from "../shared/auth.js";
+import { nextSetupPage, requireAccount } from "../shared/auth.js";
 import { runAction } from "../shared/api.js";
 import { revealPage, showToast } from "../shared/ui.js";
 
@@ -6,12 +6,27 @@ const context = await requireAccount();
 if (!context) throw new Error("Authentication required");
 const { account, session, supabase } = context;
 const form = document.querySelector("#profileForm");
+const editing = window.location.pathname.startsWith("/settings/");
 
-account.categories.forEach((interest) =>
-  document.querySelector("#primaryInterest").add(new Option(interest)),
-);
+const setupPage = editing ? nextSetupPage(account) : null;
+if (setupPage) {
+  window.location.replace(setupPage);
+} else if (editing) {
+  document.title = "Edit profile · Cougar Connect";
+  document.querySelector(".demo").textContent = "ACCOUNT SETTINGS";
+  const layout = document.querySelector("#profileLayout");
+  layout.className = "settings";
+  layout.querySelector(".intro").remove();
+  const section = layout.querySelector(".formside");
+  section.className = "panel";
+  section.querySelector(".eyebrow").remove();
+  document.querySelector("#profileHeading").textContent = "Edit profile";
+  form.querySelector("button").textContent = "Save changes";
+  document.querySelector("#cancelEdit").hidden = false;
+}
+
 if (account.profile) {
-  for (const field of ["name", "uni", "level", "graduation", "interest", "bio"])
+  for (const field of ["name", "uni", "level", "graduation", "bio"])
     form.elements[field].value = account.profile[field] || "";
   if (account.profile.photo) {
     document.querySelector("#avatarPreview").src = account.profile.photo;
@@ -19,7 +34,7 @@ if (account.profile) {
     document.querySelector("#avatarPlaceholder").hidden = true;
   }
 } else form.elements.graduation.value = "2027-04";
-revealPage();
+if (!setupPage) revealPage();
 
 document.querySelector("#photo").onchange = (event) => {
   const file = event.target.files[0];
@@ -34,6 +49,8 @@ form.onsubmit = async (event) => {
   event.preventDefault();
   const profile = Object.fromEntries(new FormData(form));
   profile.photo = account.profile?.photo || null;
+  // Keep any legacy value when saving through the existing profile RPC.
+  profile.interest = account.profile?.interest ?? null;
   try {
     const file = document.querySelector("#photo").files[0];
     if (file) {
@@ -47,7 +64,7 @@ form.onsubmit = async (event) => {
       profile.photo = `${supabase.storage.from("profile-photos").getPublicUrl(path).data.publicUrl}?v=${Date.now()}`;
     }
     await runAction("profile", profile);
-    window.location.assign("/interests");
+    window.location.assign(editing ? "/settings" : "/interests");
   } catch (error) {
     showToast(error.message);
   }

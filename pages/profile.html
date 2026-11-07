@@ -20,7 +20,7 @@
       ><span class="demo">PROFILE SETUP</span>
     </header>
     <main>
-      <div class="setup">
+      <div class="setup" id="profileLayout">
         <aside class="intro">
           <div>
             <div class="eyebrow">YOUR CAMPUS. YOUR NEXT CHAPTER.</div>
@@ -30,7 +30,7 @@
         </aside>
         <section class="formside">
           <div class="eyebrow">STEP 01 / 02</div>
-          <h2>Make yourself at home.</h2>
+          <h2 id="profileHeading">Make yourself at home.</h2>
           <form id="profileForm">
             <div class="upload">
               <img
@@ -64,14 +64,10 @@
               /></label>
             </div>
             <label
-              >Primary interest<select
-                id="primaryInterest"
-                name="interest"
-              ></select></label
-            ><label
               >Bio <span class="subtle">(optional)</span
               ><textarea name="bio" maxlength="400"></textarea></label
             ><button class="primary wide">Save profile →</button>
+            <p id="cancelEdit" hidden><a href="/settings">Cancel</a></p>
           </form>
         </section>
       </div>

@@ -5,7 +5,25 @@ import { escapeHtml, revealPage, showToast } from "../shared/ui.js";
 const context = await requireAccount();
 if (!context) throw new Error("Authentication required");
 const { account } = context;
+const editing = window.location.pathname.startsWith("/settings/");
+const saveButton = document.querySelector("#saveInterests");
 let selected = [...account.interests];
+
+if (editing) {
+  document.title = "Edit interests · Cougar Connect";
+  document.querySelector(".demo").textContent = "ACCOUNT SETTINGS";
+  const layout = document.querySelector("#interestsLayout");
+  layout.className = "settings";
+  layout.querySelector(".intro").remove();
+  const section = layout.querySelector(".formside");
+  section.className = "panel";
+  section.querySelector(".eyebrow").remove();
+  document.querySelector("#interestsHeading").textContent = "Edit interests";
+  saveButton.textContent = "Save changes";
+  const backLink = document.querySelector("#interestsBack");
+  backLink.href = "/settings";
+  backLink.textContent = "Cancel";
+}
 
 function renderChoices() {
   document.querySelector("#interestChoices").innerHTML = account.categories
@@ -16,7 +34,7 @@ function renderChoices() {
     .join("");
   document.querySelector("#interestCount").textContent =
     `${selected.length} selected · ${Math.max(0, 3 - selected.length)} more needed`;
-  document.querySelector("#saveInterests").disabled = selected.length < 3;
+  saveButton.disabled = selected.length < 3;
   document.querySelectorAll("[data-interest]").forEach((button) => {
     button.onclick = () => {
       const interest = button.dataset.interest;
@@ -28,10 +46,10 @@ function renderChoices() {
   });
 }
 
-document.querySelector("#saveInterests").onclick = async () => {
+saveButton.onclick = async () => {
   try {
     await runAction("interests", selected);
-    window.location.assign("/home");
+    window.location.assign(editing ? "/settings" : "/home");
   } catch (error) {
     showToast(error.message);
   }
