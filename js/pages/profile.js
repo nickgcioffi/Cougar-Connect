@@ -26,14 +26,17 @@ if (setupPage) {
 }
 
 if (account.profile) {
-  for (const field of ["name", "uni", "level", "graduation", "bio"])
+  for (const field of ["name", "uni", "level", "bio"])
     form.elements[field].value = account.profile[field] || "";
+  const [year = "", month = ""] = (account.profile.graduation || "").split("-");
+  form.elements.graduationYear.value = year;
+  form.elements.graduationMonth.value = month;
   if (account.profile.photo) {
     document.querySelector("#avatarPreview").src = account.profile.photo;
     document.querySelector("#avatarPreview").hidden = false;
     document.querySelector("#avatarPlaceholder").hidden = true;
   }
-} else form.elements.graduation.value = "2027-04";
+}
 if (!setupPage) revealPage();
 
 document.querySelector("#photo").onchange = (event) => {
@@ -47,7 +50,10 @@ document.querySelector("#photo").onchange = (event) => {
 
 form.onsubmit = async (event) => {
   event.preventDefault();
-  const profile = Object.fromEntries(new FormData(form));
+  const { graduationYear, graduationMonth, ...profile } = Object.fromEntries(
+    new FormData(form),
+  );
+  profile.graduation = `${graduationYear}-${graduationMonth}`;
   profile.photo = account.profile?.photo || null;
   try {
     const file = document.querySelector("#photo").files[0];

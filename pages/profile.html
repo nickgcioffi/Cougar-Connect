@@ -53,16 +53,45 @@
                 <option>Other</option>
               </select></label
             >
-            <div class="row">
-              <label
-                >Study level<select name="level">
-                  <option>Undergraduate</option>
-                  <option>Graduate</option>
-                </select></label
-              ><label
-                >Graduation date<input name="graduation" type="month" required
-              /></label>
-            </div>
+            <label
+              >Study level<select name="level">
+                <option>Undergraduate</option>
+                <option>Graduate</option>
+              </select></label
+            >
+            <fieldset class="graduation-date">
+              <legend>Graduation date</legend>
+              <div class="row">
+                <label
+                  >Month<select name="graduationMonth" required>
+                    <option value="">Select month</option>
+                    <option value="01">January</option>
+                    <option value="02">February</option>
+                    <option value="03">March</option>
+                    <option value="04">April</option>
+                    <option value="05">May</option>
+                    <option value="06">June</option>
+                    <option value="07">July</option>
+                    <option value="08">August</option>
+                    <option value="09">September</option>
+                    <option value="10">October</option>
+                    <option value="11">November</option>
+                    <option value="12">December</option>
+                  </select></label
+                >
+                <label
+                  >Year<input
+                    name="graduationYear"
+                    type="text"
+                    inputmode="numeric"
+                    pattern="(?!0000)[0-9]{4}"
+                    maxlength="4"
+                    placeholder="e.g. 2027"
+                    title="Enter a four-digit year, such as 2027"
+                    required
+                /></label>
+              </div>
+            </fieldset>
             <label
               >Bio <span class="subtle">(optional)</span
               ><textarea name="bio" maxlength="400"></textarea></label
