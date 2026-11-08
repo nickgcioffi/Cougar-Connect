@@ -144,6 +144,13 @@ header {
   width: 44px;
   height: 44px;
   padding: 0;
+  overflow: hidden;
+}
+#profileBadge img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 main {
   max-width: 1200px;
@@ -251,6 +258,51 @@ textarea {
 textarea {
   resize: vertical;
   min-height: 80px;
+}
+.graduation-date {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.graduation-date legend {
+  padding: 0;
+  margin-bottom: 6px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.graduation-months {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.graduation-month {
+  position: relative;
+  margin: 0;
+}
+.graduation-month input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+}
+.graduation-month span {
+  display: block;
+  padding: 10px 4px;
+  text-align: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  cursor: pointer;
+}
+.graduation-month input:checked + span {
+  background: var(--blue);
+  border-color: var(--blue);
+  color: white;
+}
+.graduation-month input:focus-visible + span {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
 }
 .row {
   display: grid;

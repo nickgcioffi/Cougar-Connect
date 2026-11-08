@@ -87,7 +87,6 @@ app.get("/api/state", async (req, res, next) => {
         graduation: profile.gradDate.slice(0, 7),
         bio: profile.biography,
         photo: profile.photoURL,
-        interest: profile.primaryInterest,
       },
       launch: profile?.launchPreference || "Home",
       interests: chosen.map((x) => x.Interest.name),
@@ -184,6 +183,23 @@ app.post("/api/account/delete", async (req, res, next) => {
         error: "Account deletion is not configured on this server.",
       });
 
+    const password = req.body?.password;
+    if (typeof password !== "string" || !password || !req.user.email)
+      return res.status(400).json({ error: "Enter your current password." });
+
+    const verificationClient = createClient(url, key, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+    const { data, error: verificationError } =
+      await verificationClient.auth.signInWithPassword({
+        email: req.user.email,
+        password,
+      });
+    if (verificationError?.status === 429)
+      return res.status(429).json({ error: "Too many attempts. Try again later." });
+    if (verificationError || data.user?.id !== req.user.id)
+      return res.status(403).json({ error: "Could not verify your password." });
+
     const bucket = "profile-photos";
     const files = await listStorageFiles(bucket, req.user.id);
     for (let index = 0; index < files.length; index += 1000) {
@@ -218,7 +234,9 @@ const pages = {
   "/request-organization-access": "pages/request-organization-access.html",
   "/": "index.html",
   "/profile": "pages/profile.html",
+  "/settings/profile": "pages/profile.html",
   "/interests": "pages/interests.html",
+  "/settings/interests": "pages/interests.html",
   "/home": "pages/home.html",
   "/calendar": "pages/calendar.html",
   "/feed": "pages/feed.html",

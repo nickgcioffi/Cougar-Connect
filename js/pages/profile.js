@@ -1,4 +1,4 @@
-import { requireAccount } from "../shared/auth.js";
+import { nextSetupPage, requireAccount } from "../shared/auth.js";
 import { runAction } from "../shared/api.js";
 import { revealPage, showToast } from "../shared/ui.js";
 
@@ -6,20 +6,47 @@ const context = await requireAccount();
 if (!context) throw new Error("Authentication required");
 const { account, session, supabase } = context;
 const form = document.querySelector("#profileForm");
+const editing = window.location.pathname.startsWith("/settings/");
 
-account.categories.forEach((interest) =>
-  document.querySelector("#primaryInterest").add(new Option(interest)),
+const setupPage = editing ? nextSetupPage(account) : null;
+if (setupPage) {
+  window.location.replace(setupPage);
+} else if (editing) {
+  document.title = "Edit profile · Cougar Connect";
+  document.querySelector(".demo").textContent = "ACCOUNT SETTINGS";
+  const layout = document.querySelector("#profileLayout");
+  layout.className = "settings";
+  layout.querySelector(".intro").remove();
+  const section = layout.querySelector(".formside");
+  section.className = "panel";
+  section.querySelector(".eyebrow").remove();
+  document.querySelector("#profileHeading").textContent = "Edit profile";
+  form.querySelector("button").textContent = "Save changes";
+  document.querySelector("#cancelEdit").hidden = false;
+}
+
+const [year = "", month = ""] = (account.profile?.graduation || "").split("-");
+const yearSelect = form.elements.graduationYear;
+const currentYear = new Date().getFullYear();
+const years = new Set(
+  Array.from({ length: 16 }, (_, index) => String(currentYear - 5 + index)),
 );
+if (year) years.add(year);
+for (const option of [...years].sort())
+  yearSelect.add(new Option(option, option));
+yearSelect.value = year;
+form.elements.graduationMonth.value = month;
+
 if (account.profile) {
-  for (const field of ["name", "uni", "level", "graduation", "interest", "bio"])
+  for (const field of ["name", "uni", "level", "bio"])
     form.elements[field].value = account.profile[field] || "";
   if (account.profile.photo) {
     document.querySelector("#avatarPreview").src = account.profile.photo;
     document.querySelector("#avatarPreview").hidden = false;
     document.querySelector("#avatarPlaceholder").hidden = true;
   }
-} else form.elements.graduation.value = "2027-04";
-revealPage();
+}
+if (!setupPage) revealPage();
 
 document.querySelector("#photo").onchange = (event) => {
   const file = event.target.files[0];
@@ -32,7 +59,10 @@ document.querySelector("#photo").onchange = (event) => {
 
 form.onsubmit = async (event) => {
   event.preventDefault();
-  const profile = Object.fromEntries(new FormData(form));
+  const { graduationYear, graduationMonth, ...profile } = Object.fromEntries(
+    new FormData(form),
+  );
+  profile.graduation = `${graduationYear}-${graduationMonth}`;
   profile.photo = account.profile?.photo || null;
   try {
     const file = document.querySelector("#photo").files[0];
@@ -47,7 +77,7 @@ form.onsubmit = async (event) => {
       profile.photo = `${supabase.storage.from("profile-photos").getPublicUrl(path).data.publicUrl}?v=${Date.now()}`;
     }
     await runAction("profile", profile);
-    window.location.assign("/interests");
+    window.location.assign(editing ? "/settings" : "/interests");
   } catch (error) {
     showToast(error.message);
   }

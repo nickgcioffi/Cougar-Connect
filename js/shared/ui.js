@@ -53,6 +53,16 @@ export function setAccountBadge(account) {
     .map((part) => part[0])
     .join("")
     .slice(0, 2);
+  badge.setAttribute("aria-label", "Profile settings");
+
+  if (!account.profile.photo) return;
+
+  const photo = document.createElement("img");
+  photo.alt = "";
+  photo.addEventListener("load", () => badge.replaceChildren(photo), {
+    once: true,
+  });
+  photo.src = account.profile.photo;
 }
 
 export function setLoading(isLoading) {

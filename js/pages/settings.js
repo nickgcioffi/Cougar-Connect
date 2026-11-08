@@ -36,22 +36,36 @@ document.querySelector("#signOut").onclick = async () => {
   window.location.assign("/login");
 };
 const deleteAccountDialog = document.querySelector("#deleteAccountDialog");
+const deleteAccountForm = document.querySelector("#deleteAccountForm");
+const deleteAccountPassword = document.querySelector("#deleteAccountPassword");
+const deleteAccountError = document.querySelector("#deleteAccountError");
 const confirmDeleteAccount = document.querySelector("#confirmDeleteAccount");
 document.querySelector("#openDeleteAccount").onclick = () =>
   deleteAccountDialog.showModal();
 document.querySelector("#cancelDeleteAccount").onclick = () =>
   deleteAccountDialog.close();
-confirmDeleteAccount.onclick = async () => {
+deleteAccountDialog.addEventListener("close", () => {
+  deleteAccountForm.reset();
+  deleteAccountError.hidden = true;
+});
+deleteAccountForm.onsubmit = async (event) => {
+  event.preventDefault();
+  if (confirmDeleteAccount.disabled) return;
+  deleteAccountError.hidden = true;
   confirmDeleteAccount.disabled = true;
   confirmDeleteAccount.textContent = "Deleting account…";
   try {
-    await apiRequest("account/delete", {});
+    const password = deleteAccountPassword.value;
+    deleteAccountPassword.value = "";
+    await apiRequest("account/delete", { password });
     await supabase.auth.signOut();
     window.location.assign("/");
   } catch (error) {
     confirmDeleteAccount.disabled = false;
     confirmDeleteAccount.textContent = "Yes, delete my account";
-    showToast(error.message);
+    deleteAccountError.textContent = error.message;
+    deleteAccountError.hidden = false;
+    deleteAccountPassword.focus();
   }
 };
 revealPage();

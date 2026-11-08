@@ -20,7 +20,7 @@
       ><span class="demo">PROFILE SETUP</span>
     </header>
     <main>
-      <div class="setup">
+      <div class="setup" id="profileLayout">
         <aside class="intro">
           <div>
             <div class="eyebrow">YOUR CAMPUS. YOUR NEXT CHAPTER.</div>
@@ -30,7 +30,7 @@
         </aside>
         <section class="formside">
           <div class="eyebrow">STEP 01 / 02</div>
-          <h2>Make yourself at home.</h2>
+          <h2 id="profileHeading">Make yourself at home.</h2>
           <form id="profileForm">
             <div class="upload">
               <img
@@ -53,25 +53,75 @@
                 <option>Other</option>
               </select></label
             >
-            <div class="row">
-              <label
-                >Study level<select name="level">
-                  <option>Undergraduate</option>
-                  <option>Graduate</option>
-                </select></label
-              ><label
-                >Graduation date<input name="graduation" type="month" required
-              /></label>
-            </div>
             <label
-              >Primary interest<select
-                id="primaryInterest"
-                name="interest"
-              ></select></label
-            ><label
+              >Study level<select name="level">
+                <option>Undergraduate</option>
+                <option>Graduate</option>
+              </select></label
+            >
+            <fieldset class="graduation-date">
+              <legend>Graduation date</legend>
+              <label>
+                <select name="graduationYear" aria-label="Graduation year" required>
+                  <option value="">Select year</option>
+                </select>
+              </label>
+              <div class="graduation-months" role="group" aria-label="Month">
+                <label class="graduation-month">
+                  <input type="radio" name="graduationMonth" value="01" aria-label="January" required />
+                  <span>Jan</span>
+                </label>
+                <label class="graduation-month">
+                  <input type="radio" name="graduationMonth" value="02" aria-label="February" required />
+                  <span>Feb</span>
+                </label>
+                <label class="graduation-month">
+                  <input type="radio" name="graduationMonth" value="03" aria-label="March" required />
+                  <span>Mar</span>
+                </label>
+                <label class="graduation-month">
+                  <input type="radio" name="graduationMonth" value="04" aria-label="April" required />
+                  <span>Apr</span>
+                </label>
+                <label class="graduation-month">
+                  <input type="radio" name="graduationMonth" value="05" aria-label="May" required />
+                  <span>May</span>
+                </label>
+                <label class="graduation-month">
+                  <input type="radio" name="graduationMonth" value="06" aria-label="June" required />
+                  <span>Jun</span>
+                </label>
+                <label class="graduation-month">
+                  <input type="radio" name="graduationMonth" value="07" aria-label="July" required />
+                  <span>Jul</span>
+                </label>
+                <label class="graduation-month">
+                  <input type="radio" name="graduationMonth" value="08" aria-label="August" required />
+                  <span>Aug</span>
+                </label>
+                <label class="graduation-month">
+                  <input type="radio" name="graduationMonth" value="09" aria-label="September" required />
+                  <span>Sep</span>
+                </label>
+                <label class="graduation-month">
+                  <input type="radio" name="graduationMonth" value="10" aria-label="October" required />
+                  <span>Oct</span>
+                </label>
+                <label class="graduation-month">
+                  <input type="radio" name="graduationMonth" value="11" aria-label="November" required />
+                  <span>Nov</span>
+                </label>
+                <label class="graduation-month">
+                  <input type="radio" name="graduationMonth" value="12" aria-label="December" required />
+                  <span>Dec</span>
+                </label>
+              </div>
+            </fieldset>
+            <label
               >Bio <span class="subtle">(optional)</span
               ><textarea name="bio" maxlength="400"></textarea></label
             ><button class="primary wide">Save profile →</button>
+            <p id="cancelEdit" hidden><a href="/settings">Cancel</a></p>
           </form>
         </section>
       </div>

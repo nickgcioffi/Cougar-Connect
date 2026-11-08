@@ -16,7 +16,7 @@ BYU events are scattered across campus organizations, locations, and communicati
 
 The Step 1 ERD models User, Interest, Events, and Organization, with join tables for user interests, event interests, saved user events, and event co-hosts.
 
-We are implementing a Supabase backend to persist all information entered on the Create Profile page: full name, university, study level, graduation month, primary interest, bio, and optional profile photo. Full name corresponds to FirstName and LastName; university, graduation month, bio, and photo correspond to UniName, GradDate, Biography, and PhotoURL. Study level and primary interest correspond to StudyLevel and PrimaryInterest in the ERD User table.
+We are implementing a Supabase backend to persist all information entered on the Create Profile page: full name, university, study level, graduation month, bio, and optional profile photo. Full name corresponds to FirstName and LastName; university, graduation month, bio, and photo correspond to UniName, GradDate, Biography, and PhotoURL. Study level corresponds to StudyLevel in the ERD User table.
 
 ## Tech Stack
 
@@ -148,8 +148,8 @@ After starting the server, open the local URL printed in the terminal and sign i
 The target working button is **Create profile →**: it should store all information entered on the Create Profile page in Supabase and allow the app to retrieve it after a refresh.
 
 1. Open [https://cougarconnect.app/](https://cougarconnect.app/). Sign in with an existing verified account, or register and verify your email through the link Supabase sends.
-2. Enter a recognizable full name such as `John Doe`, select a university and study level, and enter a graduation month and primary interest. Add a distinctive bio such as `Looking for tech networking events` and an optional profile photo.
+2. Enter a recognizable full name such as `John Doe`, select a university and study level, and enter a graduation month. Add a distinctive bio such as `Looking for tech networking events` and an optional profile photo.
 3. Click **Create profile →** and confirm that the app reports success or advances to the next onboarding step. Complete interest selection if prompted.
 4. In the team's Supabase project (nickgcioffi's Org), confirm that the saved profile contains every submitted field, including the photo reference if a photo was uploaded.
-5. Refresh the app, then open the profile or **Settings → Edit profile**. Confirm that the name, university, study level, graduation month, primary interest, bio, and optional photo are restored from the backend.
+5. Refresh the app, then open the profile or **Settings → Edit profile**. Confirm that the name, university, study level, graduation month, bio, and optional photo are restored from the backend.
 6. Sign out and sign back in with the verified account, then confirm that the same profile is available. This checks that the saved information is associated with the correct account.
