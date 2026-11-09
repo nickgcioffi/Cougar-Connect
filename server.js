@@ -437,26 +437,83 @@ app.get("/healthz", (req, res) => {
   res.set("Cache-Control", "no-store");
   res.json({ ok: true, revision });
 });
-const pages = {
-  "/signup": "pages/signup.html",
-  "/login": "pages/login.html",
-  "/signin": "pages/login.html",
-  "/about": "pages/about.html",
-  "/request-organization-access": "pages/request-organization-access.html",
+const views = {
+  "/signup": "signup.html",
+  "/login": "login.html",
+  "/signin": "login.html",
+  "/about": "about.html",
+  "/request-organization-access": "request-organization-access.html",
   "/": "index.html",
-  "/profile": "pages/profile.html",
-  "/settings/profile": "pages/profile.html",
-  "/interests": "pages/interests.html",
-  "/settings/interests": "pages/interests.html",
-  "/home": "pages/home.html",
-  "/calendar": "pages/calendar.html",
-  "/feed": "pages/feed.html",
-  "/settings": "pages/settings.html",
-  "/admin-login": "pages/admin-login.html",
-  "/admin": "pages/admin.html",
+  "/profile": "profile.html",
+  "/settings/profile": "profile.html",
+  "/interests": "interests.html",
+  "/settings/interests": "interests.html",
+  "/home": "home.html",
+  "/calendar": "calendar.html",
+  "/feed": "feed.html",
+  "/settings": "settings.html",
+  "/admin-login": "admin-login.html",
+  "/admin": "admin.html",
 };
-for (const [route, page] of Object.entries(pages)) {
-  app.get(route, (req, res) => res.sendFile(root + page));
+
+const mobileHost = "mobile.cougarconnect.app";
+const mainHosts = new Set(["cougarconnect.app", "www.cougarconnect.app"]);
+const mobileBreakpoint = 760;
+
+function preferredView(req) {
+  if (req.hostname.toLowerCase() === mobileHost) return "mobile";
+
+  // Client hints use CSS pixels. A browser supplies the actual viewport once
+  // available; user agent detection covers the first request on other browsers.
+  const width = Number(req.get("Sec-CH-Viewport-Width"));
+  if (width > 0) return width <= mobileBreakpoint ? "mobile" : "desktop";
+
+  // The viewport script supplies this cookie for local/preview hosts, where
+  // switching subdomains is not possible.
+  if (!mainHosts.has(req.hostname.toLowerCase())) {
+    const viewport = req
+      .get("Cookie")
+      ?.match(/(?:^|;\s*)cc_viewport=(mobile|desktop)(?:;|$)/);
+    if (viewport) return viewport[1];
+  }
+  const mobileHint = req.get("Sec-CH-UA-Mobile");
+  if (mobileHint === "?1") return "mobile";
+  if (mobileHint === "?0") return "desktop";
+  return /Android|iPhone|iPad|iPod|Mobile|IEMobile|Opera Mini/i.test(
+    req.get("User-Agent") || "",
+  )
+    ? "mobile"
+    : "desktop";
+}
+
+function serveView(req, res, filename, variant, explicit = false) {
+  res.set("Cache-Control", "private, no-store");
+  res.set("Accept-CH", "Sec-CH-UA-Mobile, Sec-CH-Viewport-Width");
+  res.vary("Host, User-Agent, Sec-CH-UA-Mobile, Sec-CH-Viewport-Width, Cookie");
+  if (
+    !explicit &&
+    variant === "mobile" &&
+    mainHosts.has(req.hostname.toLowerCase())
+  ) {
+    return res.redirect(302, `https://${mobileHost}${req.originalUrl}`);
+  }
+  return res.sendFile(root + `views/${variant}/${filename}`);
+}
+
+for (const [route, filename] of Object.entries(views)) {
+  app.get(route, (req, res) =>
+    serveView(req, res, filename, preferredView(req)),
+  );
+}
+
+// Explicit view URLs allow either version to be opened for development/review.
+// Only known templates are exposed; arbitrary files cannot be requested.
+for (const variant of ["desktop", "mobile"]) {
+  for (const filename of new Set(Object.values(views))) {
+    app.get(`/views/${variant}/${filename}`, (req, res) =>
+      serveView(req, res, filename, variant, true),
+    );
+  }
 }
 app.use("/js", express.static(root + "js"));
 app.use("/css", express.static(root + "css"));

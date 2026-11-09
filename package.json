@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "esbuild js/auth-client.js --bundle --format=iife --outfile=js/vendor/supabase.js",
-    "format": "prettier --write index.html pages js server.js test docs",
+    "format": "prettier --write views js server.js test docs",
     "start": "node --env-file-if-exists=.env server.js",
     "test": "node --test"
   },
