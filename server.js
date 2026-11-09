@@ -222,6 +222,63 @@ app.post("/api/account/delete", async (req, res, next) => {
     next(error);
   }
 });
+///
+
+app.post("/api/organization-access-request", async (req, res, next) => {
+  try {
+    if (!adminDb) {
+      return res.status(503).json({
+        error: "Organization access requests are not configured.",
+      });
+    }
+
+    const {
+      firstName,
+      lastName,
+      email,
+      organization,
+      position,
+      reason,
+    } = req.body;
+
+    if (
+      !firstName?.trim() ||
+      !lastName?.trim() ||
+      !email?.trim() ||
+      !organization?.trim() ||
+      !position?.trim() ||
+      !reason?.trim()
+    ) {
+      return res.status(400).json({
+        error: "Please complete all required fields.",
+      });
+    }
+
+    const { data, error } = await adminDb
+      .from("Organization Access Requests")
+      .insert({
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        email: email.trim().toLowerCase(),
+        organization: organization.trim(),
+        position: position.trim(),
+        reason: reason.trim(),
+      })
+      .select("requestID")
+      .single();
+
+    if (error) throw error;
+
+    res.status(201).json({
+      ok: true,
+      message: "Your organization access request was submitted successfully.",
+      requestID: data.requestID,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+///
 app.get("/healthz", (req, res) => {
   res.set("Cache-Control", "no-store");
   res.json({ ok: true, revision });
