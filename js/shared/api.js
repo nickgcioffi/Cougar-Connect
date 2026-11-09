@@ -13,9 +13,10 @@ export function getSupabase() {
   return supabase;
 }
 
-export async function apiRequest(path, body) {
+export async function apiRequest(path, body, { signal } = {}) {
   const { data } = await supabase.auth.getSession();
   const response = await fetch(`/api/${path}`, {
+    signal,
     method: body ? "POST" : "GET",
     headers: {
       "Content-Type": "application/json",

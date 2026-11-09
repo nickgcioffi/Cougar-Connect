@@ -114,6 +114,19 @@ const check = ({ data, error }) => {
   if (error) throw error;
   return data;
 };
+const normalizeEvent = (e) => ({
+  id: e.eventID,
+  name: e.name,
+  org: e.Organization.orgName,
+  orgID: e.orgID,
+  genres: e["Event Interests"].map((x) => x.Interest.name),
+  genre: e["Event Interests"][0]?.Interest.name || "",
+  type: e.type,
+  time: e.time,
+  date: e.date,
+  location: e.location,
+  desc: e.description || "",
+});
 app.get("/api/state", async (req, res, next) => {
   try {
     const db = req.db;
@@ -164,45 +177,116 @@ app.get("/api/state", async (req, res, next) => {
         id: x.orgID,
         name: x.orgName,
       })),
-      events: events
-        .map((e) => ({
-          id: e.eventID,
-          name: e.name,
-          org: e.Organization.orgName,
-          orgID: e.orgID,
-          genres: e["Event Interests"].map((x) => x.Interest.name),
-          genre: e["Event Interests"][0]?.Interest.name || "",
-          type: e.type,
-          time: e.time,
+      events: events.map(normalizeEvent).concat(
+        externalEvents.map((e) => ({
+          id: e.id,
+          name: e.title,
+          org: e.organization || "BYU Clubs",
+          orgID: null,
+          genres: [],
+          genre: "External event",
+          type: "External",
+          time: e.startTime,
+          endTime: e.endTime,
           date: e.date,
-          location: e.location,
+          location: e.location || "Location not provided",
           desc: e.description || "",
-        }))
-        .concat(
-          externalEvents.map((e) => ({
-            id: e.id,
-            name: e.title,
-            org: e.organization || "BYU Clubs",
-            orgID: null,
-            genres: [],
-            genre: "External event",
-            type: "External",
-            time: e.startTime,
-            endTime: e.endTime,
-            date: e.date,
-            location: e.location || "Location not provided",
-            desc: e.description || "",
-            external: true,
-            source: "BYU Clubs",
-            sourceUrl: e.sourceUrl,
-            sourceKey: e.sourceKey,
-          })),
-        ),
+          external: true,
+          source: "BYU Clubs",
+          sourceUrl: e.sourceUrl,
+          sourceKey: e.sourceKey,
+        })),
+      ),
     });
   } catch (error) {
     next(error);
   }
 });
+app.get("/api/events/search", async (req, res) => {
+  res.set("Cache-Control", "no-store");
+  const term = req.query.q;
+  if (typeof term !== "string" || !term.trim() || term.trim().length > 100) {
+    return res
+      .status(400)
+      .json({ error: "Enter a search term of 1–100 characters." });
+  }
+  try {
+    const events = check(
+      await req.db
+        .rpc("search_events", { search_term: term.trim() })
+        .select(
+          '*, Organization!orgID(orgName), "Event Interests"(Interest(name))',
+        ),
+    );
+    let external = [];
+    try {
+      external = JSON.parse(
+        readFileSync(root + "data/byu-clubs-events.json", "utf8"),
+      );
+    } catch (error) {
+      if (error.code !== "ENOENT") throw error;
+    }
+    const matches = external
+      .filter((e) =>
+        `${e.title} ${e.organization || "BYU Clubs"} ${e.location || ""}`
+          .toLowerCase()
+          .includes(term.trim().toLowerCase()),
+      )
+      .map((e) => ({
+        id: e.id,
+        name: e.title,
+        org: e.organization || "BYU Clubs",
+        orgID: null,
+        genres: [],
+        genre: "External event",
+        type: "External",
+        time: e.startTime,
+        endTime: e.endTime,
+        date: e.date,
+        location: e.location || "Location not provided",
+        desc: e.description || "",
+        external: true,
+        source: "BYU Clubs",
+        sourceUrl: e.sourceUrl,
+        sourceKey: e.sourceKey,
+      }));
+    res.json(
+      events
+        .map(normalizeEvent)
+        .concat(matches)
+        .sort(
+          (a, b) =>
+            a.date.localeCompare(b.date) ||
+            a.time.localeCompare(b.time) ||
+            a.id - b.id,
+        )
+        .slice(0, 8),
+    );
+  } catch (error) {
+    console.error("Event search failed:", error.message);
+    res.status(500).json({ error: "Search couldn't load. Please try again." });
+  }
+});
+app.post("/api/action", async (req, res, next) => {
+  try {
+    const { action, payload } = req.body;
+    const functions = {
+      profile: "save_profile",
+      interests: "save_interests",
+      launch: "save_launch",
+      save: "save_event",
+      event: "create_event",
+      delete: "cancel_event",
+    };
+    if (!functions[action])
+      return res.status(400).json({ error: "Unknown action." });
+    check(await req.db.rpc(functions[action], { payload }));
+    res.json({ ok: true });
+  } catch (error) {
+    next(error);
+  }
+});
+
 app.get("/api/admin/reviews", async (req, res, next) => {
   try {
     const { data: admins, error: adminError } = await req.db
@@ -320,7 +404,9 @@ app.post("/api/account/delete", async (req, res, next) => {
         password,
       });
     if (verificationError?.status === 429)
-      return res.status(429).json({ error: "Too many attempts. Try again later." });
+      return res
+        .status(429)
+        .json({ error: "Too many attempts. Try again later." });
     if (verificationError || data.user?.id !== req.user.id)
       return res.status(403).json({ error: "Could not verify your password." });
 
