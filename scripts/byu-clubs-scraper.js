@@ -13,10 +13,27 @@
     );
   }
 
-  const date = new Date(details[1].trim());
-  if (Number.isNaN(date.getTime()))
+  const dateText = details[1].trim().replace(/^[A-Za-z]+,\s*/, "");
+  const dateParts = dateText.match(/^([A-Za-z]+)\s+(\d{1,2}),?\s+(\d{4})$/);
+  const months = [
+    "january", "february", "march", "april", "may", "june",
+    "july", "august", "september", "october", "november", "december",
+  ];
+  const month = dateParts
+    ? months.findIndex((name) => name.startsWith(dateParts[1].toLowerCase()))
+    : -1;
+  const day = Number(dateParts?.[2]);
+  const year = Number(dateParts?.[3]);
+  const parsedDate = new Date(Date.UTC(year, month, day));
+  if (
+    month < 0 ||
+    parsedDate.getUTCFullYear() !== year ||
+    parsedDate.getUTCMonth() !== month ||
+    parsedDate.getUTCDate() !== day
+  ) {
     throw new Error("Could not parse event date.");
-  const isoDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+  }
+  const isoDate = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
   const times = [...details[2].matchAll(/(\d{1,2})(?::(\d{2}))?\s*(AM|PM)/gi)];
   if (times.length < 1) throw new Error("Could not parse event start time.");
   const toTime = (match) => {
