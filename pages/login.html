@@ -67,6 +67,34 @@
         </section>
       </div>
     </main>
+    <dialog id="forgotPasswordDialog" aria-labelledby="forgotPasswordTitle">
+  <h2 id="forgotPasswordTitle">Reset your password</h2>
+  <p>Enter your account email, and we’ll send you a password reset link.</p>
+
+  <form id="forgotPasswordForm">
+    <label>
+      Email address
+      <input
+        id="resetEmail"
+        name="resetEmail"
+        type="email"
+        autocomplete="email"
+        required
+      />
+    </label>
+
+    <p id="resetPasswordStatus" role="status" aria-live="polite"></p>
+
+    <div class="actions">
+      <button type="submit" id="sendResetLink" class="primary">
+        Send reset link
+      </button>
+      <button type="button" id="closeForgotPassword">
+        Cancel
+      </button>
+    </div>
+  </form>
+</dialog>
     <div id="toast" role="status"></div>
     <script src="/js/vendor/supabase.js"></script>
     <script type="module" src="/js/pages/login.js"></script>
