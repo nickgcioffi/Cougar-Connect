@@ -31,18 +31,82 @@ const adminDb = secretKey
 app.disable("x-powered-by");
 app.use(express.json({ limit: "32kb" }));
 app.get("/api/config", (req, res) => res.json({ url, key }));
+
+
+app.post("/api/organization-access-request", async (req, res, next) => {
+  try {
+    if (!adminDb) {
+      return res.status(503).json({
+        error: "Organization access requests are not configured.",
+      });
+    }
+
+    const {
+      firstName,
+      lastName,
+      email,
+      organization,
+      position,
+      reason,
+    } = req.body ?? {};
+
+    const fields = [
+      firstName,
+      lastName,
+      email,
+      organization,
+      position,
+      reason,
+    ];
+
+    if (fields.some((value) => typeof value !== "string" || !value.trim())) {
+      return res.status(400).json({
+        error: "Please complete all required fields.",
+      });
+    }
+
+    const { data, error } = await adminDb
+      .from("Organization Access Requests")
+      .insert({
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        email: email.trim().toLowerCase(),
+        organization: organization.trim(),
+        position: position.trim(),
+        reason: reason.trim(),
+      })
+      .select("requestID")
+      .single();
+
+    if (error) throw error;
+
+    res.status(201).json({
+      ok: true,
+      message: "Your organization access request was submitted successfully.",
+      requestID: data.requestID,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+
 app.use("/api", async (req, res, next) => {
   const token = req.headers.authorization?.match(/^Bearer (.+)$/)?.[1];
   if (!token) return res.status(401).json({ error: "Sign in to continue." });
+
   req.db = createClient(url, key, {
     global: { headers: { Authorization: `Bearer ${token}` } },
     auth: { persistSession: false, autoRefreshToken: false },
   });
+
   const { data, error } = await req.db.auth.getUser(token);
+
   if (error || !data.user)
     return res
       .status(401)
       .json({ error: "Your session expired. Sign in again." });
+
   req.user = data.user;
   next();
 });
@@ -222,6 +286,86 @@ app.post("/api/action", async (req, res, next) => {
     next(error);
   }
 });
+
+app.get("/api/admin/reviews", async (req, res, next) => {
+  try {
+    const { data: admins, error: adminError } = await req.db
+      .from("Organization Admins")
+      .select("orgID")
+      .eq("authUserID", req.user.id);
+
+    if (adminError) throw adminError;
+
+    const orgIDs = admins.map((admin) => admin.orgID);
+
+    if (!orgIDs.length) {
+      return res.json({ reviews: [] });
+    }
+
+    const { data: events, error: eventsError } = await req.db
+      .from("Events")
+      .select("eventID, name, orgID")
+      .in("orgID", orgIDs);
+
+    if (eventsError) throw eventsError;
+
+    if (!events.length) {
+      return res.json({ reviews: [] });
+    }
+
+    const { data: reviews, error: reviewsError } = await req.db
+      .from("Event Reviews")
+      .select("reviewID, eventID, rating, comment, created_at")
+      .in("eventID", events.map((event) => event.eventID))
+      .order("created_at", { ascending: false });
+
+    if (reviewsError) throw reviewsError;
+
+    res.json({
+      reviews: reviews.map((review) => ({
+        ...review,
+        eventName: events.find(
+          (event) => event.eventID === review.eventID,
+        )?.name,
+      })),
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post("/api/reviews", async (req, res, next) => {
+  try {
+    const { eventID, rating, comment = "" } = req.body ?? {};
+
+    if (
+      !Number.isSafeInteger(eventID) ||
+      !Number.isInteger(rating) ||
+      rating < 1 ||
+      rating > 5 ||
+      typeof comment !== "string" ||
+      comment.length > 1000
+    ) {
+      return res.status(400).json({
+        error: "Select a rating from 1 to 5 and enter a valid comment.",
+      });
+    }
+
+    const { error } = await req.db.from("Event Reviews").insert({
+      eventID,
+      authUserID: req.user.id,
+      rating,
+      comment: comment.trim(),
+    });
+
+    if (error) throw error;
+
+    res.status(201).json({ ok: true });
+  } catch (error) {
+    next(error);
+  }
+});
+
 async function listStorageFiles(bucket, folder) {
   const paths = [];
   for (let offset = 0; ; offset += 1000) {
@@ -288,6 +432,7 @@ app.post("/api/account/delete", async (req, res, next) => {
     next(error);
   }
 });
+
 app.get("/healthz", (req, res) => {
   res.set("Cache-Control", "no-store");
   res.json({ ok: true, revision });

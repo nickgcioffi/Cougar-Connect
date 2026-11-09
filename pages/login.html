@@ -55,15 +55,46 @@
             ><button type="button" id="createAccount" class="wide">
               Create account
             </button>
-            <a class="wide" href="/admin-login" style="text-align: center">
-              Log in as Admin
-            </a>
           </form>
-          <button id="resetPassword">Forgot password</button>
+          <button
+          type="button"
+          id="resetPassword"
+          class="forgot-password-link"
+        >
+          Forgot password?
+        </button>
           <a class="auth-card-back" href="/">← Back to home</a>
         </section>
       </div>
     </main>
+    <dialog id="forgotPasswordDialog" aria-labelledby="forgotPasswordTitle">
+  <h2 id="forgotPasswordTitle">Reset your password</h2>
+  <p>Enter your account email, and we’ll send you a password reset link.</p>
+
+  <form id="forgotPasswordForm">
+    <label>
+      Email address
+      <input
+        id="resetEmail"
+        name="resetEmail"
+        type="email"
+        autocomplete="email"
+        required
+      />
+    </label>
+
+    <p id="resetPasswordStatus" role="status" aria-live="polite"></p>
+
+    <div class="actions">
+      <button type="submit" id="sendResetLink" class="primary">
+        Send reset link
+      </button>
+      <button type="button" id="closeForgotPassword">
+        Cancel
+      </button>
+    </div>
+  </form>
+</dialog>
     <div id="toast" role="status"></div>
     <script src="/js/vendor/supabase.js"></script>
     <script type="module" src="/js/pages/login.js"></script>
