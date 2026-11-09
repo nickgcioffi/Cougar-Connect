@@ -21,7 +21,7 @@ test("Express serves the app and rejects unauthenticated database requests", asy
   await symlink(
     join(source, "node_modules"),
     join(fixture, "node_modules"),
-    "dir",
+    "junction",
   );
   await writeFile(join(fixture, ".release-sha"), revision + "\n", {
     mode: 0o640,
@@ -96,8 +96,16 @@ test("Express serves the app and rejects unauthenticated database requests", asy
     const health = await fetch(base + "/healthz");
     assert.equal(health.headers.get("cache-control"), "no-store");
     assert.deepEqual(await health.json(), { ok: true, revision });
-  } finally {
-    server.kill();
-    await rm(fixture, { recursive: true, force: true });
-  }
+} finally {
+  const stopped = once(server, "exit");
+  server.kill();
+  await stopped;
+
+  await rm(fixture, {
+    recursive: true,
+    force: true,
+    maxRetries: 5,
+    retryDelay: 200,
+  });
+}
 });
