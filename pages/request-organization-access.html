@@ -1,13 +1,87 @@
+
 <!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Request Organization Access · Cougar Connect</title>
+    <title>Request Admin Access · Cougar Connect</title>
     <link rel="stylesheet" href="/css/styles.css" />
   </head>
   <body>
-    <header class="landing-header"><a class="brand" href="/"><img class="mark" src="/assets/byu-logo.png" alt="BYU" width="62" height="40" />cougar<span class="light">connect</span></a></header>
-    <main><div class="eyebrow">COUGAR CONNECT</div><h1>Request Organization Access</h1><p>This page is coming soon.</p><a href="/">Back to Cougar Connect</a></main>
+    <header class="landing-header">
+      <a class="brand" href="/">
+        <img class="mark" src="/assets/byu-logo.png" alt="BYU" width="62" height="40" />
+        cougar<span class="light">connect</span>
+      </a>
+    </header>
+
+    <main class="access-request-page">
+      <div class="eyebrow">COUGAR CONNECT</div>
+      <h1>Request Admin Access</h1>
+      <p>Represent a BYU club or organization? Request access to manage your organization's events.</p>
+
+      <form id="accessRequestForm">
+        <label for="firstName">First Name</label>
+        <input id="firstName" name="firstName" required maxlength="100" />
+
+        <label for="lastName">Last Name</label>
+        <input id="lastName" name="lastName" required maxlength="100" />
+
+        <label for="email">BYU Email</label>
+        <input id="email" name="email" type="email" required maxlength="254" />
+
+        <label for="organization">Organization Name</label>
+        <input id="organization" name="organization" required maxlength="150" />
+
+        <label for="position">Your Position</label>
+        <input id="position" name="position" required maxlength="100" />
+
+        <label for="reason">Why do you need admin access?</label>
+        <textarea id="reason" name="reason" rows="5" required maxlength="2000"></textarea>
+
+        <button class="primary" type="submit" id="submitRequest">Submit Request</button>
+        <p id="formMessage" role="status" aria-live="polite"></p>
+      </form>
+
+      <p><a href="/">Back to Home</a></p>
+    </main>
+
+    <script>
+      const form = document.getElementById("accessRequestForm");
+      const message = document.getElementById("formMessage");
+      const submitButton = document.getElementById("submitRequest");
+
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        message.textContent = "";
+        submitButton.disabled = true;
+        submitButton.textContent = "Submitting...";
+
+        const payload = Object.fromEntries(new FormData(form).entries());
+
+        try {
+          const response = await fetch("/api/organization-access-request", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+
+          const result = await response.json();
+
+          if (!response.ok) {
+            throw new Error(result.error || "Unable to submit request.");
+          }
+
+          message.textContent = "Your request was submitted successfully!";
+          form.reset();
+        } catch (error) {
+          message.textContent = error.message || "Something went wrong. Please try again.";
+        } finally {
+          submitButton.disabled = false;
+          submitButton.textContent = "Submit Request";
+        }
+      });
+    </script>
   </body>
 </html>
