@@ -22,7 +22,7 @@ We are implementing a Supabase backend to persist all information entered on the
 
 | Layer | Technology | Why it fits our prototype |
 | --- | --- | --- |
-| Structure | HTML5 (`dist/index.html`) | Standard form controls and a simple entry point without a build process. |
+| Structure | HTML5 (`views/desktop/` and `views/mobile/`) | Separate desktop and mobile templates; see [view routing](docs/view-routing.md). |
 | Presentation | CSS (`dist/styles.css`) | Responsive desktop and mobile layouts without a UI framework. |
 | Interaction | Vanilla JavaScript (`dist/app.js`) | Profile creation, interests, calendar filtering, search, and saved events in a directly editable codebase. |
 | Persistence | Browser localStorage, key `cougar-demo` | Demonstrates persistence across refreshes without server setup. |
