@@ -1,5 +1,5 @@
 import { requireAccount } from "../shared/auth.js";
-import { loadAccount, runAction } from "../shared/api.js";
+import { apiRequest, loadAccount, runAction } from "../shared/api.js";
 import {
   escapeHtml,
   eventDate,
@@ -152,3 +152,29 @@ renderAdmin();
 revealPage();
 
 document.querySelector("#cancelEditing").onclick = resetEventForm;
+
+async function loadAdminReviews() {
+  const container = document.querySelector("#adminReviews");
+
+  try {
+    const { reviews } = await apiRequest("admin/reviews");
+
+    container.innerHTML = reviews.length
+      ? reviews
+          .map(
+            (review) => `
+              <div style="padding: 16px 0; border-bottom: 1px solid #ddd;">
+                <strong>${escapeHtml(review.eventName || "Event")}</strong>
+                <p>⭐ ${review.rating}/5</p>
+                <p>${escapeHtml(review.comment || "No written feedback.")}</p>
+              </div>
+            `,
+          )
+          .join("")
+      : "<p>No student feedback yet.</p>";
+  } catch (error) {
+    container.textContent = error.message;
+  }
+}
+
+loadAdminReviews();
