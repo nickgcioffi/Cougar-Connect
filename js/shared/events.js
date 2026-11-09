@@ -1,4 +1,4 @@
-import { runAction } from "./api.js";
+import { apiRequest, runAction } from "./api.js";
 import { $, escapeHtml, eventDate, eventTime, showToast } from "./ui.js";
 
 export function eventCard(event, saved) {
@@ -27,6 +27,77 @@ export function openEvent(account, id, onChange) {
     ? eventTime({ date: event.date, time: event.endTime })
     : "";
   dialog.innerHTML = `<button class="close" id="closeDetail" aria-label="Close event details">✕</button><span class="tag">${escapeHtml(event.external ? "External · BYU Clubs" : event.genre)}</span><h1 style="font-size:30px;margin-top:22px">${escapeHtml(event.name)}</h1><p>${eventDate(event)}, ${eventTime(event)}${endTime ? `–${endTime}` : ""}<br>${escapeHtml(event.location)}<br>Hosted by ${escapeHtml(event.org)}</p><p>${escapeHtml(event.desc)}</p>${event.external ? `<p><a href="${escapeHtml(event.sourceUrl)}" target="_blank" rel="noopener noreferrer">View on BYU Clubs ↗</a></p>` : ""}<div class="actions">${event.external ? "" : `<button class="primary" id="saveEvent">${saved ? "♥ Saved · remove from upcoming" : "♡ Like & add to upcoming"}</button>`}<button id="googleCalendar">Add to Google Calendar ↗</button><button id="shareEvent">Share event</button></div>`;
+  // Show feedback form for past, non-external events.
+  const eventStart = new Date(`${event.date}T${event.time}`);
+
+const eventEnd = event.endTime
+  ? new Date(`${event.date}T${event.endTime}`)
+  : new Date(eventStart.getTime() + 60 * 60 * 1000);
+
+const canReview = !event.external && eventEnd < new Date();
+  if (canReview) {
+    dialog.insertAdjacentHTML(
+      "beforeend",
+      `
+      <section class="panel" style="margin-top:24px">
+        <h3>Rate this event</h3>
+        <p>Share your experience with the club organizers.</p>
+
+        <form id="eventReviewForm">
+          <label for="reviewRating">Your rating</label>
+          <select id="reviewRating" name="rating" required>
+            <option value="">Choose a rating</option>
+            <option value="5">★★★★★ — Excellent</option>
+            <option value="4">★★★★☆ — Good</option>
+            <option value="3">★★★☆☆ — Average</option>
+            <option value="2">★★☆☆☆ — Fair</option>
+            <option value="1">★☆☆☆☆ — Poor</option>
+          </select>
+
+          <label for="reviewComment">Your feedback (optional)</label>
+          <textarea
+            id="reviewComment"
+            name="comment"
+            maxlength="1000"
+            placeholder="What did you enjoy? What could be improved?"
+          ></textarea>
+
+          <button type="submit" class="primary">
+            Submit feedback
+          </button>
+        </form>
+      </section>
+      `,
+    );
+  }
+
+
+const reviewForm = $("#eventReviewForm");
+
+if (reviewForm) {
+  reviewForm.onsubmit = async (submitEvent) => {
+    submitEvent.preventDefault();
+
+    const submitButton = reviewForm.querySelector('button[type="submit"]');
+    submitButton.disabled = true;
+
+    try {
+      await apiRequest("reviews", {
+        eventID: Number(event.id),
+        rating: Number(reviewForm.elements.namedItem("rating").value),
+        comment: reviewForm.elements.namedItem("comment").value,
+      });
+
+      dialog.close();
+      showToast("Feedback submitted successfully");
+    } catch (error) {
+      showToast(error.message);
+    } finally {
+      submitButton.disabled = false;
+    }
+  };
+}
+
   dialog.showModal();
   $("#closeDetail").onclick = () => dialog.close();
   if (!event.external)

@@ -8,11 +8,13 @@ supabase.auth.onAuthStateChange((event) => {
   if (event === "PASSWORD_RECOVERY") {
     recoveryMode = true;
     document.querySelector("#authTitle").textContent = "Choose a new password";
-    document.querySelector("#emailLabel").hidden = true;
+    const emailLabel = document.querySelector("#emailLabel");
+    emailLabel.hidden = true;
+    emailLabel.querySelector("input").required = false;
     const createAccount = document.querySelector("#createAccount");
     if (createAccount) createAccount.hidden = true;
-    document.querySelector('[value="login"]').textContent = "Update password";
-  }
+    const submitButton = document.querySelector('#authForm button[type="submit"], #authForm button[name="action"]');
+if (submitButton) submitButton.textContent = "Update password";}
 });
 
 const { data } = await supabase.auth.getSession();

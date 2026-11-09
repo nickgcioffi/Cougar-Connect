@@ -1395,3 +1395,34 @@ select {
     font-size: 10px;
   }
 }
+
+
+.forgot-password-link {
+  display: block;
+  margin: 12px 0 20px auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #64748b;
+  font: inherit;
+  font-size: 0.875rem;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.forgot-password-link:hover {
+  color: #1e40af;
+}
+
+.auth-switch {
+  margin-top: 16px;
+  text-align: center;
+  font-size: 0.9rem;
+  color: #64748b;
+}
+
+.auth-switch a {
+  color: #1e40af;
+  font-weight: 600;
+  text-decoration: underline;
+}

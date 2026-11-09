@@ -52,10 +52,18 @@
         </div>
         <label>Location<input name="location" required /></label
         ><label>Description<textarea name="desc" required></textarea></label
-        ><button class="primary">Create event</button>
+        ><button class="primary" type="submit">Create event</button>
+        <button id="cancelEditing" type="button" hidden>Cancel editing</button>
       </form>
-      <h2>All events</h2>
+      <h2>Your organization's events</h2>
       <div id="adminEvents"></div>
+      <section class="panel" style="margin-top: 24px;">
+    <h2>Student Feedback</h2>
+    <p>See what students are saying about your organization's events.</p>
+    <div id="adminReviews">
+      <p>Loading feedback...</p>
+    </div>
+  </section>
     </main>
     <div id="toast" role="status"></div>
     <script src="/js/vendor/supabase.js"></script>
