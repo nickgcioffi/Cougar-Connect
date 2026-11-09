@@ -207,13 +207,14 @@ app.post("/api/action", async (req, res, next) => {
   try {
     const { action, payload } = req.body;
     const functions = {
-      profile: "save_profile",
-      interests: "save_interests",
-      launch: "save_launch",
-      save: "save_event",
-      event: "create_event",
-      delete: "cancel_event",
-    };
+    profile: "save_profile",
+    interests: "save_interests",
+    launch: "save_launch",
+    save: "save_event",
+    event: "create_event",
+    update: "update_event",
+    delete: "cancel_event",
+  };
     if (!functions[action])
       return res.status(400).json({ error: "Unknown action." });
     check(await req.db.rpc(functions[action], { payload }));

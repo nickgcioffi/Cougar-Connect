@@ -52,9 +52,10 @@
         </div>
         <label>Location<input name="location" required /></label
         ><label>Description<textarea name="desc" required></textarea></label
-        ><button class="primary">Create event</button>
+        ><button class="primary" type="submit">Create event</button>
+        <button id="cancelEditing" type="button" hidden>Cancel editing</button>
       </form>
-      <h2>All events</h2>
+      <h2>Your organization's events</h2>
       <div id="adminEvents"></div>
     </main>
     <div id="toast" role="status"></div>
