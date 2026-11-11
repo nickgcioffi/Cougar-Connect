@@ -29,9 +29,9 @@ const [year = "", month = ""] = (account.profile?.graduation || "").split("-");
 const yearSelect = form.elements.graduationYear;
 const currentYear = new Date().getFullYear();
 const years = new Set(
-  Array.from({ length: 16 }, (_, index) => String(currentYear - 5 + index)),
+  Array.from({ length: 11 }, (_, index) => String(currentYear + index)),
 );
-if (year) years.add(year);
+if (year && Number(year) >= currentYear) years.add(year);
 for (const option of [...years].sort())
   yearSelect.add(new Option(option, option));
 yearSelect.value = year;
