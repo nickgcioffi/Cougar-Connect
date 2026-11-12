@@ -1432,3 +1432,37 @@ select {
   font-weight: 600;
   text-decoration: underline;
 }
+
+#messagePopup {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  width: calc(100% - 32px);
+  max-width: 440px;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-sizing: border-box;
+  padding: 28px;
+  background: white;
+  color: var(--navy);
+  border: 0;
+  border-radius: 20px;
+  box-shadow: 0 24px 80px #001b5540;
+}
+
+#messagePopup::backdrop {
+  background: rgb(0 20 50 / 60%);
+}
+
+#messagePopup h2 {
+  margin: 0 0 12px;
+  font-size: 1.3rem;
+}
+
+#messagePopup p {
+  margin: 0 0 24px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  color: #111827;
+  font-weight: 600;
+}
