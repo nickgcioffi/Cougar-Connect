@@ -2,6 +2,7 @@ import express from "express";
 import { createClient } from "@supabase/supabase-js";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import { randomUUID } from "node:crypto";
 const app = express();
 const root = fileURLToPath(new URL(".", import.meta.url));
 const host = process.env.HOST || "127.0.0.1";
@@ -29,6 +30,11 @@ const adminDb = secretKey
     })
   : null;
 app.disable("x-powered-by");
+app.use((req, res, next) => {
+  req.requestId = randomUUID();
+  res.set("X-Request-ID", req.requestId);
+  next();
+});
 app.use(express.json({ limit: "32kb" }));
 app.get("/api/config", (req, res) => res.json({ url, key }));
 
@@ -202,7 +208,7 @@ app.get("/api/state", async (req, res, next) => {
     next(error);
   }
 });
-app.get("/api/events/search", async (req, res) => {
+app.get("/api/events/search", async (req, res, next) => {
   res.set("Cache-Control", "no-store");
   const term = req.query.q;
   if (typeof term !== "string" || !term.trim() || term.trim().length > 100) {
@@ -262,10 +268,9 @@ app.get("/api/events/search", async (req, res) => {
         )
         .slice(0, 8),
     );
-  } catch (error) {
-    console.error("Event search failed:", error.message);
-    res.status(500).json({ error: "Search couldn't load. Please try again." });
-  }
+} catch (error) {
+  next(error);
+}
 });
 app.post("/api/action", async (req, res, next) => {
   try {
@@ -519,10 +524,44 @@ app.use("/js", express.static(root + "js"));
 app.use("/css", express.static(root + "css"));
 app.use("/assets", express.static(root + "assets"));
 app.use((error, req, res, next) => {
-  console.error(error.message);
-  res
-    .status(400)
-    .json({ error: error.message || "Unable to complete the request." });
+  console.error("Request failed", {
+    requestId: req.requestId,
+    method: req.method,
+    path: req.path,
+    code: error.code,
+    message: error.message,
+    details: error.details,
+    stack: error.stack,
+  });
+
+  if (res.headersSent) return next(error);
+
+  let status = 500;
+  let message = "Unable to complete the request. Please try again.";
+
+  if (error.type === "entity.parse.failed") {
+    status = 400;
+    message = "The request contains invalid JSON.";
+  } else if (error.type === "entity.too.large") {
+    status = 413;
+    message = "The request is too large.";
+  } else if (error.code === "42501") {
+    status = 403;
+    message = "You do not have permission to perform this action.";
+  } else if (error.code === "23505") {
+    status = 409;
+    message = "This information conflicts with an existing record.";
+  } else if (
+    ["22P02", "23502", "23503", "23514"].includes(error.code)
+  ) {
+    status = 400;
+    message = "Some submitted information is invalid. Check your entries.";
+  }
+
+  res.status(status).json({
+    error: message,
+    requestId: req.requestId,
+  });
 });
 app.listen(port, host, () =>
   console.log(`Cougar Connect: http://${host}:${port}`),
