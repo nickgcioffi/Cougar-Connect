@@ -1,5 +1,7 @@
 import { createHash } from "node:crypto";
-import { readFile, writeFile, mkdir } from "node:fs/promises";
+import lockfile from "proper-lockfile";
+import { randomUUID } from "node:crypto";
+import { readFile, writeFile, mkdir, rename, rm } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -15,8 +17,6 @@ if (!inputPath) {
 const dataPath = resolve(root, "data/byu-clubs-events.json");
 const incomingValue = JSON.parse(await readFile(resolve(inputPath), "utf8"));
 const incoming = Array.isArray(incomingValue) ? incomingValue : [incomingValue];
-const existing = JSON.parse(await readFile(dataPath, "utf8"));
-const byKey = new Map(existing.map((event) => [event.sourceKey, event]));
 
 function normalize(event) {
   const eventId = String(event.sourceKey || "").match(/^byu-clubs:(\d+)$/)?.[1];
@@ -53,13 +53,28 @@ function normalize(event) {
   };
 }
 
-for (const event of incoming) {
-  const normalized = normalize(event);
-  byKey.set(normalized.sourceKey, normalized);
-}
-
+const normalizedEvents = incoming.map(normalize);
 await mkdir(dirname(dataPath), { recursive: true });
-await writeFile(dataPath, `${JSON.stringify([...byKey.values()], null, 2)}\n`);
-console.log(
-  `Imported ${incoming.length} event(s); ${byKey.size} unique event(s) stored locally.`,
-);
+const release = await lockfile.lock(dataPath, {
+  stale: 5000,
+  update: 1000,
+  retries: { retries: 100, factor: 1, minTimeout: 100, maxTimeout: 100 },
+});
+const temporaryPath = `${dataPath}.${randomUUID()}.tmp`;
+try {
+  const existing = JSON.parse(await readFile(dataPath, "utf8"));
+  const byKey = new Map(existing.map((event) => [event.sourceKey, event]));
+  for (const event of normalizedEvents) byKey.set(event.sourceKey, event);
+  await writeFile(
+    temporaryPath,
+    `${JSON.stringify([...byKey.values()], null, 2)}\n`,
+    { flag: "wx" },
+  );
+  await rename(temporaryPath, dataPath);
+  console.log(
+    `Imported ${incoming.length} event(s); ${byKey.size} unique event(s) stored locally.`,
+  );
+} finally {
+  await rm(temporaryPath, { force: true });
+  await release();
+}

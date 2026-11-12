@@ -143,7 +143,39 @@ If Git reports a conflict or that it cannot fast-forward, resolve the branch dif
 
 After starting the server, open the local URL printed in the terminal and sign in with your existing verified account. Keep the terminal open while using the app; press `Ctrl+C` to stop the server. If the server is already running, you can open its URL directly. You do not need to register or verify your email again for an existing verified account.
 
-## Verifying the Vertical Slice
+
+### Current automated tests
+
+Install dependencies with `npm ci`. Run the Node suites with `npm test`, or an individual file with `node --test test/database.test.js`. The tests use Node's built-in test runner and disposable fixtures. API and deployment suites start local HTTP servers, so the environment must allow loopback connections.
+
+Install the browser runtime once with `npx playwright install chromium`, then run `npm run test:browser`. On Linux CI, use `npx playwright install --with-deps chromium`. Run both the Node and browser suites with `npm run test:all`.
+
+| Test file | Current coverage |
+| --- | --- |
+| `test/server.test.js` | Page and asset responses, desktop/mobile routing, configuration and release health responses, unauthenticated API rejection, and protection against serving private repository files. |
+| `test/view-routing.test.js` | Viewport redirects, URL preservation, explicit mobile routes, and local viewport selection. |
+| `test/search.test.js` | Search input validation, user authorization forwarding, RPC arguments, external event merging, empty results, and backend errors through a mock Supabase service. |
+| `test/byu-clubs-crawler.test.js` | Date filtering, month/year boundaries, pagination, resume behavior, visit limits, empty results, and navigation failures using simulated browser state. |
+| `test/openai.test.js` | The standalone connection check's model/settings, strict output format, missing credentials, provider/network failures, refusals, and malformed results. |
+| `test/authenticated-api.test.js` | Missing/invalid/expired token rejection, all six action/RPC contracts, user identity forwarding, profile save/reload, state aggregation, safe database errors, event review validation, organization-scoped review queries, and account deletion verification and cleanup order. Uses a stateful mock Supabase service. |
+| `test/client-workflows.test.js` | Auth initialization, session headers, save/unsave payloads, onboarding destinations, account loading, session/error redirects, and escaped event cards with saved and empty states. Uses small browser fixtures. |
+| `test/database.test.js` | Applies the real SQL migrations to disposable embedded PostgreSQL. Exercises RPC validation, persistent profile fields, isolation of two users' profiles/interests/saved events, storage upload-path policies, anonymous and direct-write restrictions, organization membership, admin event operations, SQL search, account purge permissions, and failed-migration rollback/recovery. Includes four executable known-failure authorization checks described below. |
+| `test/organization-access.test.js` | Runs the real submission endpoint with local OpenAI/Resend substitutes and a PostgreSQL-backed persistence adapter. Checks normalization, all three persisted statuses, email content and save ordering, review fallbacks, database/email failures, missing settings, manual database decision transitions, and reuse of the notifier for those decisions. |
+| `test/calendar-export.test.js` | Campus-time export instants across client timezones, winter/summer offsets, explicit and default durations, spring/fall daylight-saving transitions, rejection of nonexistent spring times, and deterministic selection of the first repeated fall time. |
+| `test/import-persistence.test.js` | Runs the real importer against temporary files. Checks normalization, stable IDs, deduplication, updates, preservation of unrelated events, invalid-batch rejection, concurrent writers, and recovery from an abandoned lock after a killed process. |
+| `test/deployment.test.js` | Builds the browser SDK in an isolated release, checks required assets and the exact health revision, and verifies that a failed replacement process leaves the existing release healthy. |
+| `tests/browser/journeys.spec.js` | Chromium desktop and mobile journeys through signup confirmation messaging, login errors and success, signout, profile/photo onboarding, interest selection, refresh/relogin, password reset and recovery, search, event details, save/unsave, calendar filters/month navigation, and request-access feedback. Real page scripts run with fixture auth/API services. |
+| `tests/live/providers.test.js` | Opt-in evaluations of ambiguous, malicious, and prompt-injected fictional applications using the actual review helper, plus all three notification emails checked for Resend's delivered event. Requires explicit test credentials and a recipient. |
+
+The SQL fixture in `test/fixtures/base-schema.sql` supplies the coursework tables and minimal Supabase auth/storage interfaces that the migrations require. PostgreSQL executes the actual functions and RLS policies. The fixture and the request table used by the endpoint suite define expected schema contracts. Compatibility with the deployed Supabase project's schema and managed auth/storage services requires verification against that environment.
+
+Four database checks execute as `todo` because migration 002 currently permits every authenticated user to create and cancel events. They assert rejection of ordinary users and of admins operating outside their assigned organization. Node reports their failed assertions separately while allowing the remaining suite to complete. These are implemented regression tests for unresolved authorization defects. Calendar's earlier timezone TODO has been resolved.
+
+Browser tests use fixture authentication, confirmation, recovery, upload, and API responses. Database persistence and RLS are exercised separately in PostgreSQL. Manual decision tests perform a database update and explicitly invoke the notifier. The application currently has no human-review endpoint or automatic notification trigger for manual status changes. Import persistence targets the local JSON store used by the application.
+
+Live provider tests are disabled by default. To run them, place `TEST_OPENAI_API_KEY`, `TEST_RESEND_API_KEY`, `TEST_EMAIL_FROM`, and `TEST_EMAIL_TO` in the ignored `.env.test` file, then run `RUN_LIVE_TESTS=1 npm run test:live`. Use a verified sender and an inbox controlled by the team. This command consumes OpenAI quota and sends three real notification emails. It checks the provider's delivered event, which does not establish inbox placement. Without the opt-in flag, `npm run test:live` reports the four provider tests as skipped. Provider response semantics follow the [Resend retrieval API](https://resend.com/docs/api-reference/emails/retrieve-email).
+
+### Manual profile verification
 
 The target working button is **Create profile →**: it should store all information entered on the Create Profile page in Supabase and allow the app to retrieve it after a refresh.
 

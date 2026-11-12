@@ -12,6 +12,7 @@ test("Express serves the app and rejects unauthenticated database requests", asy
   const source = fileURLToPath(new URL("..", import.meta.url));
   const revision = "0123456789abcdef0123456789abcdef01234567";
   await cp(join(source, "server.js"), join(fixture, "server.js"));
+  await cp(join(source, "server"), join(fixture, "server"), { recursive: true });
   await cp(join(source, "views"), join(fixture, "views"), { recursive: true });
   await cp(join(source, "js"), join(fixture, "js"), { recursive: true });
   await cp(join(source, "css"), join(fixture, "css"), { recursive: true });
