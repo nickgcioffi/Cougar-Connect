@@ -75,7 +75,12 @@
             throw new Error(result.error || "Unable to submit request.");
           }
 
-          message.textContent = "Your request was submitted successfully!";
+          const statusMessages = {
+            Denied: "Your request was reviewed and denied.",
+            Pended: "Your request was submitted and is pending human review.",
+            Approved: "Your request was reviewed and approved.",
+          };
+          message.textContent = `${statusMessages[result.status] || "Your request was submitted successfully!"}${result.notificationSent ? " A notification email was sent." : ""}`;
           form.reset();
         } catch (error) {
           message.textContent = error.message || "Something went wrong. Please try again.";

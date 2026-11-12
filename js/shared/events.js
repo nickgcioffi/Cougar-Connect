@@ -1,3 +1,4 @@
+import { eventTimestamp } from "./event-time.js";
 import { apiRequest, runAction } from "./api.js";
 import { $, escapeHtml, eventDate, eventTime, showToast } from "./ui.js";
 
@@ -28,10 +29,10 @@ export function openEvent(account, id, onChange) {
     : "";
   dialog.innerHTML = `<button class="close" id="closeDetail" aria-label="Close event details">✕</button><span class="tag">${escapeHtml(event.external ? "External · BYU Clubs" : event.genre)}</span><h1 style="font-size:30px;margin-top:22px">${escapeHtml(event.name)}</h1><p>${eventDate(event)}, ${eventTime(event)}${endTime ? `–${endTime}` : ""}<br>${escapeHtml(event.location)}<br>Hosted by ${escapeHtml(event.org)}</p><p>${escapeHtml(event.desc)}</p>${event.external ? `<p><a href="${escapeHtml(event.sourceUrl)}" target="_blank" rel="noopener noreferrer">View on BYU Clubs ↗</a></p>` : ""}<div class="actions">${event.external ? "" : `<button class="primary" id="saveEvent">${saved ? "♥ Saved · remove from upcoming" : "♡ Like & add to upcoming"}</button>`}<button id="googleCalendar">Add to Google Calendar ↗</button><button id="shareEvent">Share event</button></div>`;
   // Show feedback form for past, non-external events.
-  const eventStart = new Date(`${event.date}T${event.time}`);
+  const eventStart = eventTimestamp(event.date, event.time);
 
 const eventEnd = event.endTime
-  ? new Date(`${event.date}T${event.endTime}`)
+  ? eventTimestamp(event.date, event.endTime)
   : new Date(eventStart.getTime() + 60 * 60 * 1000);
 
 const canReview = !event.external && eventEnd < new Date();
@@ -111,9 +112,9 @@ if (reviewForm) {
       }
     };
   $("#googleCalendar").onclick = () => {
-    const start = new Date(`${event.date}T${event.time}`);
+    const start = eventTimestamp(event.date, event.time);
     const end = event.endTime
-      ? new Date(`${event.date}T${event.endTime}`)
+      ? eventTimestamp(event.date, event.endTime)
       : new Date(start.getTime() + 3600000);
     const stamp = (date) =>
       date

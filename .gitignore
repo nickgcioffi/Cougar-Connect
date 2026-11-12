@@ -6,3 +6,7 @@ node_modules/
 !.env.example
 js/vendor/
 .release-sha
+
+# Browser test output
+playwright-report/
+test-results/

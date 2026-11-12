@@ -1,3 +1,4 @@
+import { reviewOrganizationAccessRequest, sendOrganizationAccessNotification } from "./server/organization-access.js";
 import express from "express";
 import { createClient } from "@supabase/supabase-js";
 import { readFileSync } from "node:fs";
@@ -71,25 +72,38 @@ app.post("/api/organization-access-request", async (req, res, next) => {
       });
     }
 
+    const request = {
+      firstName: firstName.trim(),
+      lastName: lastName.trim(),
+      email: email.trim().toLowerCase(),
+      organization: organization.trim(),
+      position: position.trim(),
+      reason: reason.trim(),
+    };
+    const review = await reviewOrganizationAccessRequest(request);
+
     const { data, error } = await adminDb
       .from("Organization Access Requests")
       .insert({
-        firstName: firstName.trim(),
-        lastName: lastName.trim(),
-        email: email.trim().toLowerCase(),
-        organization: organization.trim(),
-        position: position.trim(),
-        reason: reason.trim(),
+        ...request,
+        status: review.status,
       })
       .select("requestID")
       .single();
 
     if (error) throw error;
 
+    const notificationSent = await sendOrganizationAccessNotification(
+      request,
+      review.status,
+    );
+
     res.status(201).json({
       ok: true,
       message: "Your organization access request was submitted successfully.",
       requestID: data.requestID,
+      status: review.status,
+      notificationSent,
     });
   } catch (error) {
     next(error);
@@ -563,6 +577,6 @@ app.use((error, req, res, next) => {
     requestId: req.requestId,
   });
 });
-app.listen(port, host, () =>
-  console.log(`Cougar Connect: http://${host}:${port}`),
+const server = app.listen(port, host, () =>
+  console.log(`Cougar Connect: http://${host}:${server.address().port}`),
 );

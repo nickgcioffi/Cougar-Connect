@@ -1,19 +1,26 @@
 {
   "name": "cougar-connect",
-  "version": "0.7.0-alpha",
+  "version": "1.0.0-beta",
   "private": true,
   "type": "module",
   "scripts": {
     "build": "esbuild js/auth-client.js --bundle --format=iife --outfile=js/vendor/supabase.js",
     "format": "prettier --write views js server.js test docs",
     "start": "node --env-file-if-exists=.env server.js",
-    "test": "node --test"
+    "check:openai": "node --env-file-if-exists=.env --env-file-if-exists=ai.env scripts/check-openai.js",
+    "test": "node --test test/*.test.js",
+    "test:browser": "playwright test",
+    "test:all": "npm test && npm run test:browser",
+    "test:live": "node --env-file-if-exists=.env.test --test tests/live/*.test.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.0.0",
-    "express": "^5.0.0"
+    "express": "^5.0.0",
+    "proper-lockfile": "^4.1.2"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.16",
+    "@playwright/test": "^1.65.0",
     "esbuild": "^0.25.0",
     "prettier": "^3.9.10"
   }
