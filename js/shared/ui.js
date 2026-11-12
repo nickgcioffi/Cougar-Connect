@@ -23,12 +23,29 @@ export function escapeHtml(value) {
 }
 
 export function showToast(message) {
-  const toast = $("#toast");
-  toast.textContent = message;
-  toast.style.display = "block";
-  window.setTimeout(() => {
-    toast.style.display = "none";
-  }, 3500);
+  let popup = document.querySelector("#messagePopup");
+
+  if (!popup) {
+    popup = document.createElement("dialog");
+    popup.id = "messagePopup";
+    popup.setAttribute("aria-label", "Account message");
+    popup.setAttribute("aria-describedby", "messagePopupText");
+
+    popup.innerHTML = `
+      <p id="messagePopupText"></p>
+      <button type="button" class="primary wide">Got it</button>
+    `;
+
+    popup.querySelector("button").addEventListener("click", () => {
+      popup.close();
+    });
+
+    document.body.appendChild(popup);
+  }
+
+  popup.querySelector("#messagePopupText").textContent = message;
+
+  if (!popup.open) popup.showModal();
 }
 
 export function eventDate(event) {
