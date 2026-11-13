@@ -8,7 +8,7 @@ No installation or local server setup is required to use the hosted website. If 
 
 ## App Summary
 
-BYU events are scattered across campus organizations, locations, and communication channels. Students can struggle to know where to look or which opportunities are relevant to them. Cougar Connect focuses first on an upperclassman who wants to build their résumé and get involved on campus. The app brings sample events into one place, with a searchable calendar and filters for interests, event type, time, location, and hosting organization. Students create a profile and select interests to discover opportunities that fit their goals. They can save events, review event details, and export events to their calendars. The team is connecting this responsive coursework app to Supabase for profile storage and email verification, providing a starting point for maintenance and support for additional student personas.
+BYU events are scattered across campus organizations, locations, and communication channels. Students can struggle to know where to look or which opportunities are relevant to them. Cougar Connect focuses first on an upperclassman who wants to build their résumé and get involved on campus. The app brings campus events into one place, with a searchable calendar and filters for interests, event type, time, location, and hosting organization. Students create a profile and select interests to discover opportunities that fit their goals. They can save events, review event details, and add events to Google Calendar. The site also provides a request form for organization access. The app uses Supabase for profile storage and email verification.
 
 ## ERD
 
@@ -16,133 +16,46 @@ BYU events are scattered across campus organizations, locations, and communicati
 
 The Step 1 ERD models User, Interest, Events, and Organization, with join tables for user interests, event interests, saved user events, and event co-hosts.
 
-We are implementing a Supabase backend to persist all information entered on the Create Profile page: full name, university, study level, graduation month, bio, and optional profile photo. Full name corresponds to FirstName and LastName; university, graduation month, bio, and photo correspond to UniName, GradDate, Biography, and PhotoURL. Study level corresponds to StudyLevel in the ERD User table.
+The Supabase backend persists all information entered on the Create Profile page: full name, university, study level, graduation month, bio, and optional profile photo. Full name corresponds to FirstName and LastName; university, graduation month, bio, and photo correspond to UniName, GradDate, Biography, and PhotoURL. Study level corresponds to StudyLevel in the ERD User table.
 
 ## Tech Stack
 
-| Layer | Technology | Why it fits our prototype |
-| --- | --- | --- |
-| Structure | HTML5 (`views/desktop/` and `views/mobile/`) | Separate desktop and mobile templates; see [view routing](docs/view-routing.md). |
-| Presentation | CSS (`dist/styles.css`) | Responsive desktop and mobile layouts without a UI framework. |
-| Interaction | Vanilla JavaScript (`dist/app.js`) | Profile creation, interests, calendar filtering, search, and saved events in a directly editable codebase. |
-| Persistence | Browser localStorage, key `cougar-demo` | Demonstrates persistence across refreshes without server setup. |
-| Backend (in progress) | Supabase | The team is implementing shared backend persistence for every input on the Create Profile page, aligned with the ERD. |
-| Data | Fictional sample events and locally created events | Lets the team demonstrate discovery before connecting real event sources. |
-| Access | Modern web browser | Opens the hosted app at https://cougarconnect.app/. |
-
-Supabase will send a verification email during account registration; users must follow the link in that email to verify their email address. The static files in this checkout still represent the earlier localStorage prototype.
+| Layer | Current implementation |
+| --- | --- |
+| Views | HTML templates in `views/desktop/` and `views/mobile/`, served by Express. See [view routing](docs/view-routing.md). |
+| Browser | Shared CSS in `css/` and vanilla JavaScript in `js/`, including `js/app.js`. |
+| Server | Node.js and Express (`server.js`) serve pages, assets, and API endpoints. |
+| Authentication and persistence | Supabase Auth handles registration and email verification. Supabase Postgres stores profiles, interests, and saved events. Supabase Storage handles profile photos. |
+| Events | The API combines Supabase event data with imported BYU club events from `data/byu-clubs-events.json`. |
+| Build | esbuild bundles `js/auth-client.js` into `js/vendor/supabase.js`. |
 
 ## Run Locally (Optional)
 
-If you prefer to run the app on your own computer using localhost, follow the same macOS or Windows installation instructions below. These steps are optional; accessing the hosted website does not require installation. If you already have the tools installed, skip to [Running a Local Copy After Initial Setup](#running-a-local-copy-after-initial-setup).
-
-### macOS
-
-1. On macOS, install Homebrew using the instructions at [brew.sh](https://brew.sh), then install Node.js and npm:
-
-   ```sh
-   brew install node
-   node --version
-   npm --version
-   ```
-
-2. Clone the repository and switch to the integration branch:
-
-   ```sh
-   git clone https://github.com/nickgcioffi/Cougar-Connect.git
-   cd Cougar-Connect
-   git checkout supabase-integration
-   ```
-
-3. Install dependencies, build the app, and start the local server:
-
-   ```sh
-   npm install
-   npm run build
-   npm start
-   ```
-
-4. Open the local app URL printed in the terminal. Keep the server running while using the app; press `Ctrl+C` to stop it.
-5. Register using an email address you can access. **Supabase will send a verification email.** Check your inbox and spam folder, open the email, and follow its verification link. Return to the app and sign in if prompted.
-6. Complete the Create Profile form and continue through interest selection.
-
-### Windows
-
-1. Install the LTS version of Node.js from [nodejs.org](https://nodejs.org/en/download), selecting the Windows installer. Keep npm and the option to add Node.js to PATH enabled. Install Git using the [Git for Windows installer](https://git-scm.com/downloads/win).
-2. Open a new Command Prompt window after installation and verify the tools:
-
-   ```bat
-   node --version
-   npm --version
-   git --version
-   ```
-
-3. Clone the repository and switch to the integration branch:
-
-   ```bat
-   git clone https://github.com/nickgcioffi/Cougar-Connect.git
-   cd Cougar-Connect
-   git checkout supabase-integration
-   ```
-
-4. Install dependencies, build the app, and start the local server:
-
-   ```bat
-   npm install
-   npm run build
-   npm start
-   ```
-
-5. Open the local app URL printed in Command Prompt. Keep the server running while using the app; press `Ctrl+C` to stop it.
-6. Register using an email address you can access. Check your inbox and spam folder for the verification email, follow its link, then return to the app and sign in if prompted.
-7. Complete the Create Profile form and continue through interest selection.
-
-If the integration branch requires Supabase configuration, use its environment-variable instructions or obtain the required configuration from the team. This static checkout contains no package manifest or Supabase configuration, so run the npm commands in the cloned team repository.
-
-## Running a Local Copy After Initial Setup
-
-Use macOS Terminal or Windows Command Prompt. You only need to install Homebrew, Node.js, and Git once. Having Homebrew installed alone does not install Node.js; if `node --version` or `npm --version` fails on macOS, run `brew install node` first.
-
-### Tools Installed, but No Local Copy Yet
-
-If Node.js, npm, and Git are already installed, start here:
+Install Node.js 22 or newer with npm, and Git. The commands below work in macOS Terminal and Windows Command Prompt.
 
 ```sh
 git clone https://github.com/nickgcioffi/Cougar-Connect.git
 cd Cougar-Connect
-git checkout supabase-integration
-npm install
+npm ci
 npm run build
 npm start
 ```
 
-### Opening an Existing Local Copy
+A fresh clone checks out the default branch, `main`. Open the URL printed by Express, which defaults to `http://127.0.0.1:3000`. Keep the terminal open while using the app. Press Ctrl+C to stop the server.
 
-Open a terminal in your cloned `Cougar-Connect` folder (or use `cd` with its actual path), then run:
+The server has defaults for the project's Supabase URL and publishable key. To use different settings, copy [`.env.example`](.env.example) to `.env` and set `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` for your configured Supabase project. Keep any Supabase secret or service-role key in the server environment. Registration requires access to the email inbox for the confirmation link. When using a separate Supabase project, configure its Auth redirect URLs for the local app.
 
-```sh
-git checkout supabase-integration
-npm start
-```
+## Running a Local Copy After Initial Setup
 
-If this copy has never been set up, run `npm install` and `npm run build` before `npm start`. For a copy that is already set up, `npm start` is enough to restart the app.
-
-### Getting the Latest Team Updates
-
-In your cloned repository, save and commit any local work before switching branches or pulling updates. Then run:
+Run `npm start` from the repository root to restart an existing build. To update a checkout of `main`, save any local work first, then run:
 
 ```sh
-git checkout supabase-integration
-git pull --ff-only origin supabase-integration
-npm install
+git switch main
+git pull --ff-only origin main
+npm ci
 npm run build
 npm start
 ```
-
-If Git reports a conflict or that it cannot fast-forward, resolve the branch differences with the team before continuing.
-
-After starting the server, open the local URL printed in the terminal and sign in with your existing verified account. Keep the terminal open while using the app; press `Ctrl+C` to stop the server. If the server is already running, you can open its URL directly. You do not need to register or verify your email again for an existing verified account.
-
 
 ### Current automated tests
 
