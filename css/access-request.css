@@ -1,0 +1,131 @@
+body > main.access-request-page {
+  max-width: 800px;
+  padding-top: 28px;
+}
+.access-request-page .request-intro {
+  margin: 24px 0;
+}
+.access-request-page h1 {
+  margin: 8px 0 12px;
+}
+.access-request-page .request-intro > p {
+  margin: 0;
+  max-width: 620px;
+}
+.access-request-page #accessRequestForm {
+  padding: 28px;
+  margin: 0 0 32px;
+}
+.access-request-page fieldset {
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  margin: 0;
+}
+.access-request-page legend {
+  font-size: 18px;
+  font-weight: 700;
+  padding: 0;
+  margin-bottom: 12px;
+}
+.access-request-page .request-account > p {
+  font-size: 14px;
+  margin: -4px 0 16px;
+}
+.request-name-fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px;
+}
+.access-request-page label {
+  margin: 0 0 18px;
+}
+.access-request-page input,
+.access-request-page textarea {
+  display: block;
+  margin-top: 6px;
+  min-width: 0;
+}
+.access-request-page input[readonly] {
+  background: var(--bg);
+  border-color: var(--line);
+}
+.access-request-page .request-organization {
+  border-top: 1px solid var(--line);
+  margin-top: 12px;
+  padding-top: 24px;
+}
+.access-request-page .request-organization legend {
+  float: left;
+  width: 100%;
+  margin-bottom: 20px;
+}
+.access-request-page .request-organization label {
+  clear: both;
+}
+.access-request-page .request-submit {
+  padding-top: 4px;
+}
+.access-request-page #requestQuota {
+  margin: 0 0 14px;
+  font-size: 13px;
+}
+.access-request-page #formMessage {
+  margin: 16px 0 0;
+}
+.access-request-page #formMessage:empty {
+  display: none;
+}
+.access-request-page #requestHistory h2 {
+  font-size: 22px;
+  margin: 0 0 16px;
+}
+.request-history-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: white;
+  padding: 16px 20px;
+  margin-bottom: 12px;
+}
+.access-request-page .request-history-card h3 {
+  font-size: 16px;
+  margin: 0;
+}
+.access-request-page .request-history-card p {
+  margin: 4px 0 0;
+  font-size: 13px;
+}
+.request-status {
+  font-size: 13px;
+  background: #edf3ff;
+  border-radius: 6px;
+  padding: 5px 9px;
+  white-space: nowrap;
+}
+.request-history-empty {
+  font-size: 14px;
+}
+body[data-mobile] > main.access-request-page {
+  max-width: 800px;
+}
+@media (max-width: 600px) {
+  .access-request-page #accessRequestForm {
+    padding: 22px 16px;
+  }
+  .request-name-fields {
+    gap: 12px;
+  }
+  .access-request-page #submitRequest {
+    width: 100%;
+    min-height: 48px;
+  }
+  .request-history-card {
+    padding: 16px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+}

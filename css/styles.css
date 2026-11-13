@@ -1360,6 +1360,19 @@ select {
   color: #111827;
   font-weight: 600;
 }
+.landing-header .landing-session {
+  font-size: 13px;
+  color: var(--muted);
+  text-underline-offset: 3px;
+}
+.landing-header .landing-session[hidden] { display: none; }
+.access-request-page { max-width: 720px; }
+.access-request-page input[readonly] { background: #edf0f5; color: var(--muted); }
+.access-request-page form { margin-bottom: 32px; }
+
+.settings [hidden] {
+  display: none !important;
+}
 
 /* Past events remain readable and clickable. */
 .card.event-ended,

@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="en">
   <head>
@@ -8,87 +7,91 @@
     <script defer src="/js/shared/view-routing.js"></script>
     <title>Request Admin Access · Cougar Connect</title>
     <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="stylesheet" href="/css/access-request.css" />
   </head>
   <body>
     <header class="landing-header">
       <a class="brand" href="/">
-        <img class="mark" src="/assets/byu-logo.png" alt="BYU" width="62" height="40" />
+        <img
+          class="mark"
+          src="/assets/byu-logo.png"
+          alt="BYU"
+          width="62"
+          height="40"
+        />
         cougar<span class="light">connect</span>
       </a>
     </header>
 
     <main class="access-request-page">
-      <div class="eyebrow">COUGAR CONNECT</div>
-      <h1>Request Admin Access</h1>
-      <p>Represent a BYU club or organization? Request access to manage your organization's events.</p>
-
-      <form id="accessRequestForm">
-        <label for="firstName">First Name</label>
-        <input id="firstName" name="firstName" required maxlength="100" />
-
-        <label for="lastName">Last Name</label>
-        <input id="lastName" name="lastName" required maxlength="100" />
-
-        <label for="email">BYU Email</label>
-        <input id="email" name="email" type="email" required maxlength="254" />
-
-        <label for="organization">Organization Name</label>
-        <input id="organization" name="organization" required maxlength="150" />
-
-        <label for="position">Your Position</label>
-        <input id="position" name="position" required maxlength="100" />
-
-        <label for="reason">Why do you need admin access?</label>
-        <textarea id="reason" name="reason" rows="5" required maxlength="2000"></textarea>
-
-        <button class="primary" type="submit" id="submitRequest">Submit Request</button>
-        <p id="formMessage" role="status" aria-live="polite"></p>
+      <a class="request-back" href="/">← Home</a>
+      <div class="request-intro">
+        <div class="eyebrow">FOR CAMPUS ORGANIZERS</div>
+        <h1>Request admin access</h1>
+        <p>
+          Tell us about your role and the organization you represent. An
+          operator will verify your affiliation before granting access.
+        </p>
+      </div>
+      <form id="accessRequestForm" class="panel">
+        <fieldset class="request-account">
+          <legend>Your account</legend>
+          <p>These details come from your signed-in account.</p>
+          <div class="request-name-fields">
+            <label for="firstName"
+              >First name<input id="firstName" name="firstName" readonly
+            /></label>
+            <label for="lastName"
+              >Last name<input id="lastName" name="lastName" readonly
+            /></label>
+          </div>
+          <label for="email"
+            >Account email<input id="email" name="email" type="email" readonly
+          /></label>
+        </fieldset>
+        <fieldset class="request-organization">
+          <legend>Organization details</legend>
+          <label for="organization"
+            >Organization name<input
+              id="organization"
+              name="organization"
+              required
+              maxlength="150"
+              placeholder="Your club or organization"
+          /></label>
+          <label for="position"
+            >Your position<input
+              id="position"
+              name="position"
+              required
+              maxlength="100"
+              placeholder="e.g. Events coordinator"
+          /></label>
+          <label for="reason"
+            >Why do you need admin access?<textarea
+              id="reason"
+              name="reason"
+              rows="4"
+              required
+              maxlength="2000"
+              placeholder="Describe the events you will manage and your responsibilities."
+            ></textarea>
+          </label>
+        </fieldset>
+        <div class="request-submit">
+          <p id="requestQuota" role="status">
+            Up to 3 requests per day. Resets at midnight Mountain Time.
+          </p>
+          <button class="primary" type="submit" id="submitRequest" disabled>
+            Submit request
+          </button>
+          <p id="formMessage" role="status" aria-live="polite"></p>
+        </div>
       </form>
-
-      <p><a href="/">Back to Home</a></p>
+      <section id="requestHistory" aria-label="Your access requests"></section>
     </main>
 
-    <script>
-      const form = document.getElementById("accessRequestForm");
-      const message = document.getElementById("formMessage");
-      const submitButton = document.getElementById("submitRequest");
-
-      form.addEventListener("submit", async (event) => {
-        event.preventDefault();
-
-        message.textContent = "";
-        submitButton.disabled = true;
-        submitButton.textContent = "Submitting...";
-
-        const payload = Object.fromEntries(new FormData(form).entries());
-
-        try {
-          const response = await fetch("/api/organization-access-request", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-          });
-
-          const result = await response.json();
-
-          if (!response.ok) {
-            throw new Error(result.error || "Unable to submit request.");
-          }
-
-          const statusMessages = {
-            Denied: "Your request was reviewed and denied.",
-            Pended: "Your request was submitted and is pending human review.",
-            Approved: "Your request was reviewed and approved.",
-          };
-          message.textContent = `${statusMessages[result.status] || "Your request was submitted successfully!"}${result.notificationSent ? " A notification email was sent." : ""}`;
-          form.reset();
-        } catch (error) {
-          message.textContent = error.message || "Something went wrong. Please try again.";
-        } finally {
-          submitButton.disabled = false;
-          submitButton.textContent = "Submit Request";
-        }
-      });
-    </script>
+    <script src="/js/vendor/supabase.js"></script>
+    <script type="module" src="/js/pages/organization-access.js"></script>
   </body>
 </html>

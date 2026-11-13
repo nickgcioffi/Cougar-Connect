@@ -160,6 +160,22 @@ test("authenticated application workflows", async (t) => {
         for (const token of ["", "invalid", "expired"]) {
           for (const [path, body] of [
             ["/api/state"],
+            [
+              "/api/organization-access-request",
+              {
+                organization: "Test Club",
+                position: "Officer",
+                reason: "Manage events",
+              },
+            ],
+            ["/api/organization-access-requests"],
+            ["/api/operator/access"],
+            ["/api/operator/organizations", { name: "New Club" }],
+            [
+              "/api/operator/access/decision",
+              { requestID: 1, decision: "Approved", orgID: 7 },
+            ],
+            ["/api/operator/access/revoke", { authUserID: userID, orgID: 7 }],
             ["/api/action", { action: "delete", payload: { id: 12 } }],
             ["/api/reviews", { eventID: 12, rating: 5 }],
             ["/api/account/delete", { password: "secret" }],

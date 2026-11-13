@@ -59,11 +59,17 @@
             </select></label
           >
         </div>
-        <div class="panel">
-          <h2>Club administration</h2>
-          <p>Manage campus events during development.</p>
-          <a href="/admin">Open dashboard →</a>
-        </div>
+        <section class="panel" id="clubSettings" aria-labelledby="clubSettingsTitle" hidden>
+          <h2 id="clubSettingsTitle">Your clubs</h2>
+          <p>Manage events for your assigned clubs and organizations.</p>
+          <ul id="assignedClubs"></ul>
+          <a href="/admin" id="openAdmin">Club dashboard →</a>
+        </section>
+        <section class="panel" id="operatorSettings" aria-labelledby="operatorSettingsTitle" hidden>
+          <h2 id="operatorSettingsTitle">Operator tools</h2>
+          <p>Review organization access requests flagged for human review and manage access.</p>
+          <a href="/operator/access" id="openAccessReview">Operator dashboard →</a>
+        </section>
         <div class="panel">
           <h2>Account</h2>
           <button id="resetPassword">Reset password</button>

@@ -80,3 +80,20 @@
 @media(min-width:701px) and (max-width:1100px){.landing-page .cc-hero,.landing-page .cc-feature{gap:32px;padding-left:28px;padding-right:28px}.landing-page .cc-hero-preview{padding:20px}.landing-page .cc-demo{padding:18px}.landing-page .cc-window{padding:18px}.landing-page .cc-divider{margin:0 28px}}
 @media(max-width:700px){.landing-page .cc-hero,.landing-page .cc-feature{grid-template-columns:minmax(0,1fr);padding:56px 22px;gap:32px;min-height:0}.landing-page .cc-hero h1{font-size:clamp(36px,8vw,53px);letter-spacing:-1.8px}.landing-page .cc-hero-copy>p{font-size:16px}.landing-page .cc-hero-preview{padding:20px}.landing-page .cc-reverse .cc-feature-copy,.landing-page .cc-reverse .cc-demo{grid-column:auto;grid-row:auto}.landing-page .cc-feature h2{font-size:35px;letter-spacing:-1.2px}.landing-page .cc-demo{padding:18px}.landing-page .cc-window,.landing-page .cc-save-preview{padding:20px}.landing-page .cc-divider{margin:0 22px;align-items:flex-start;flex-direction:column;gap:7px}.landing-page .cc-preview-top{font-size:8px}.landing-page .cc-card-body{padding:12px}.landing-page .cc-card h3{font-size:16px}}
 @media(max-width:360px){.landing-page .cc-event-grid{grid-template-columns:1fr}.landing-page .cc-hero,.landing-page .cc-feature{padding-left:16px;padding-right:16px}.landing-page .cc-demo{padding:12px}.landing-page .cc-window{padding:14px}}
+
+/* Resolve the saved session before showing the landing page's account links. */
+.landing-page [data-landing-auth],
+.landing-page .landing-session {
+  opacity: 1;
+  transition: opacity 240ms ease;
+}
+.landing-auth-pending .landing-page [data-landing-auth],
+.landing-auth-pending .landing-page .landing-session {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .landing-page [data-landing-auth],
+  .landing-page .landing-session { transition: none; }
+}

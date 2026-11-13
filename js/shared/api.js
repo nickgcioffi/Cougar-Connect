@@ -25,7 +25,10 @@ export async function apiRequest(path, body, { signal } = {}) {
     ...(body ? { body: JSON.stringify(body) } : {}),
   });
   const result = await response.json();
-  if (!response.ok) throw new Error(result.error || "Request failed");
+  if (!response.ok)
+    throw Object.assign(new Error(result.error || "Request failed"), {
+      status: response.status,
+    });
   return result;
 }
 

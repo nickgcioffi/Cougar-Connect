@@ -1,0 +1,185 @@
+/* Spacing for both versions of the operator screen. */
+body.operator-page > main {
+  max-width: 960px;
+  padding-top: 28px;
+}
+.operator-page main > h1 {
+  margin: 20px 0 24px;
+}
+.operator-page .panel {
+  margin: 0;
+  padding: 24px;
+}
+.operator-page [hidden] {
+  display: none !important;
+}
+.operator-page #reviewStatus:empty,
+.operator-page #organizationStatus:empty {
+  display: none;
+}
+.operator-page #reviewStatus {
+  margin: 0 0 24px;
+}
+.operator-page #organizationCreation {
+  margin-bottom: 32px;
+}
+.operator-page #organizationCreation h2 {
+  margin-bottom: 8px;
+}
+.operator-page #organizationCreation > p {
+  margin: 0 0 20px;
+}
+.operator-page #createOrganizationForm {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px 12px;
+  align-items: start;
+}
+.operator-page #createOrganizationForm label {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+.operator-page #createOrganizationForm input {
+  margin: 0;
+  min-width: 0;
+}
+.operator-page #createOrganizationForm :is(input, button) {
+  min-height: 48px;
+}
+.operator-page #organizationStatus {
+  grid-column: 1 / -1;
+  margin: 4px 0 0;
+}
+.operator-page #accessReviews {
+  display: grid;
+  gap: 32px;
+}
+.operator-section {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+.operator-section > h2 {
+  margin: 0;
+}
+.operator-page .operator-request {
+  display: grid;
+  gap: 20px;
+}
+.operator-page .request-heading h3 {
+  margin: 0 0 4px;
+}
+.operator-page .request-heading p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.request-details {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+.request-details > div {
+  display: grid;
+  grid-template-columns: 80px minmax(0, 1fr);
+  gap: 12px;
+}
+.request-details dt {
+  color: var(--muted);
+}
+.request-details dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.request-review-summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+  gap: 16px;
+  padding: 16px;
+  border-radius: 10px;
+  background: var(--bg);
+}
+.review-label {
+  display: block;
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+.operator-page .request-review-summary p {
+  margin: 4px 0 0;
+  font-size: 14px;
+}
+.request-decision {
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+}
+.operator-page .request-decision label {
+  margin: 0;
+}
+.operator-page .request-decision p {
+  margin: 8px 0 16px;
+  font-size: 14px;
+}
+.operator-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.operator-page .operator-assignment {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+.operator-page .operator-assignment > div {
+  min-width: 0;
+}
+.operator-page .operator-assignment h3 {
+  margin: 0 0 4px;
+}
+.operator-page .operator-assignment p {
+  margin: 0;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.operator-assignment button {
+  flex-shrink: 0;
+}
+body.operator-page[data-mobile] > main {
+  max-width: 760px;
+}
+@media (max-width: 600px) {
+  .operator-page .panel {
+    padding: 18px 16px;
+  }
+  .operator-page #createOrganizationForm {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+  .operator-page #organizationCreation {
+    margin-bottom: 24px;
+  }
+  .operator-page #accessReviews {
+    gap: 24px;
+  }
+  .operator-page .operator-request {
+    gap: 16px;
+  }
+  .request-review-summary {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+    padding: 12px;
+  }
+  .request-details > div {
+    grid-template-columns: 64px minmax(0, 1fr);
+    gap: 8px;
+  }
+  .operator-actions {
+    flex-direction: column;
+    gap: 10px;
+  }
+  .operator-page .operator-assignment {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+}
