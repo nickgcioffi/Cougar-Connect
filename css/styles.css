@@ -935,50 +935,7 @@ select {
   padding: 0 max(5vw, calc((100vw - 1320px) / 2));
 }
 .landing-header .brand { flex: 0 0 auto; font-size: 22px; }
-.feature-menu { position: relative; }
-.feature-menu summary {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  list-style: none;
-  color: var(--ink);
-  font-size: 14px;
-  font-weight: 650;
-  white-space: nowrap;
-  line-height: 1.4;
-}
-.feature-menu summary::-webkit-details-marker { display: none; }
-.feature-menu summary .feature-menu-caret {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-right: 2px solid var(--blue);
-  border-bottom: 2px solid var(--blue);
-  font-size: 0;
-  transform: rotate(45deg) translateY(-2px);
-  transition: transform 140ms ease;
-}
-.feature-menu[open] summary .feature-menu-caret { transform: rotate(225deg) translateY(-2px); }
-.feature-menu nav {
-  position: absolute;
-  top: calc(100% + 12px);
-  left: -12px;
-  right: auto;
-  bottom: auto;
-  min-width: 245px;
-  width: max-content;
-  display: grid;
-  gap: 2px;
-  padding: 10px;
-  border: 1px solid #dce3ed;
-  border-radius: 14px;
-  background: #fff;
-  box-shadow: 0 18px 42px #00255430;
-  z-index: 60;
-  transform: none;
-}
-.feature-menu nav a, .landing-header .header-link, .footer-links a, .footer-team summary {
+.landing-header .header-link, .footer-links a, .footer-team summary {
   border: 0;
   padding: 10px;
   color: var(--ink);
@@ -988,9 +945,7 @@ select {
   font-weight: 600;
   white-space: nowrap;
 }
-.feature-menu nav a { min-width: 0; display: block; text-align: left; border-radius: 8px; }
-.feature-menu nav a.mobile-menu-link { display: none; }
-.feature-menu nav a:hover, .landing-header .header-link:hover, .footer-links a:hover, .footer-team summary:hover {
+.landing-header .header-link:hover, .footer-links a:hover, .footer-team summary:hover {
   color: var(--blue);
   background: #f2f6ff;
 }
@@ -1151,8 +1106,6 @@ select {
   .landing-header .brand { font-size: 18px; gap: 6px; letter-spacing: -1px; }
   .landing-header .mark { height: 31px; }
   .landing-header .light { margin-left: -6px; }
-  .feature-menu summary { font-size: 0; }
-  .feature-menu summary::before { content: "Explore"; font-size: 13px; }
   .landing-header > .header-link { display: none; }
   .header-actions { gap: 10px; }
   .landing-header .login-link { font-size: 13px; }
@@ -1251,76 +1204,6 @@ select {
     margin-left: auto;
   }
 
-  .landing-header .feature-menu {
-    order: 3;
-    display: block;
-    flex: 0 0 auto;
-  }
-
-  .landing-header .feature-menu summary {
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    padding: 0;
-    border: 1px solid var(--line);
-    border-radius: 9px;
-    font-size: 0;
-  }
-
-  .landing-header .feature-menu summary::before {
-    display: none;
-  }
-
-  .landing-header .feature-menu summary .feature-menu-icon {
-    display: block;
-    width: 18px;
-    height: 16px;
-    margin: 0;
-    background: linear-gradient(
-      to bottom,
-      var(--navy) 0 2px,
-      transparent 2px 7px,
-      var(--navy) 7px 9px,
-      transparent 9px 14px,
-      var(--navy) 14px 16px
-    );
-    background-position: center;
-    background-repeat: no-repeat;
-  }
-
-  .landing-header .feature-menu summary .feature-menu-label {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
-    border: 0;
-  }
-
-  .landing-header .feature-menu summary .feature-menu-caret {
-    display: none;
-  }
-
-  .landing-header .feature-menu nav {
-    position: fixed;
-    top: 78px;
-    right: 12px;
-    left: auto;
-    bottom: auto;
-    min-width: min(270px, calc(100vw - 24px));
-    width: max-content;
-    max-width: calc(100vw - 24px);
-  }
-
-  .landing-header .feature-menu nav a.mobile-menu-link {
-    display: block;
-  }
 
   .landing-header {
     gap: 8px;
