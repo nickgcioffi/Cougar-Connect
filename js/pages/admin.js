@@ -86,6 +86,8 @@ function renderAdmin() {
       form.elements.namedItem("date").value = selectedEvent.date;
       form.elements.namedItem("time").value =
         selectedEvent.time?.slice(0, 5) || "";
+      form.elements.namedItem("endTime").value =
+        selectedEvent.endTime?.slice(0, 5) || "";
       form.elements.namedItem("location").value = selectedEvent.location;
       form.elements.namedItem("desc").value = selectedEvent.desc || "";
 

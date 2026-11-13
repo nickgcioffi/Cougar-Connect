@@ -138,8 +138,18 @@ authForm.addEventListener("submit", async (event) => {
     } else {
       showToast("Check your email to confirm your account, then sign in.");
     }
-  } catch (error) {
-    showToast(error.message);
+
+  } catch(error) {
+    if (
+      error.code === "user_already_exists" ||
+      error.message?.toLowerCase().includes("already registered")
+    ){
+      showToast(
+        "You already have an account! Please sign in to continue."
+      );
+    } else {
+      showToast(error.message);
+    }  
   } finally {
     authButton.disabled = false;
   }
