@@ -275,19 +275,29 @@ test("mobile agenda opens details and saves an event with touch controls", async
   expect(nav.height).toBeGreaterThanOrEqual(48);
 });
 
-test("mobile landing header keeps menu beside brand at phone widths", async ({
+test("mobile landing header offers admin access at phone widths", async ({
   page,
 }) => {
-  await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("/views/mobile/index.html");
-  const brand = await page.locator(".landing-header .brand").boundingBox();
-  const menu = await page.locator(".feature-menu summary").boundingBox();
-  expect(
-    Math.abs(brand.y + brand.height / 2 - (menu.y + menu.height / 2)),
-  ).toBeLessThan(2);
-  expect(
-    await page.evaluate(
-      () => document.documentElement.scrollWidth <= innerWidth,
-    ),
-  ).toBeTruthy();
+  for (const width of [320, 390]) {
+    await page.setViewportSize({ width, height: 844 });
+    await page.goto("/views/mobile/index.html");
+    const header = page.locator(".landing-header");
+    await expect(
+      header.locator('a[href="/login"], a[href="/signup"]'),
+    ).toHaveCount(0);
+    const action = header.getByRole("link", { name: "Request admin access" });
+    await expect(action).toBeVisible();
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBeTruthy();
+    const brand = await header.locator(".brand").boundingBox();
+    const button = await action.boundingBox();
+    expect(
+      Math.abs(brand.y + brand.height / 2 - (button.y + button.height / 2)),
+    ).toBeLessThan(2);
+    await action.click();
+    await expect(page).toHaveURL(/request-organization-access/);
+  }
 });
