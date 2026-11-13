@@ -145,6 +145,7 @@ const normalizeEvent = (e) => ({
   time: e.time,
   date: e.date,
   location: e.location,
+  endTime: e.endTime,
   desc: e.description || "",
 });
 app.get("/api/state", async (req, res, next) => {
@@ -296,6 +297,7 @@ app.post("/api/action", async (req, res, next) => {
       save: "save_event",
       event: "create_event",
       delete: "cancel_event",
+      update: "update_event",
     };
     if (!functions[action])
       return res.status(400).json({ error: "Unknown action." });
@@ -369,6 +371,42 @@ app.post("/api/reviews", async (req, res, next) => {
         error: "Select a rating from 1 to 5 and enter a valid comment.",
       });
     }
+
+
+    const { data: event, error: eventError } = await req.db
+      .from("Events")
+      .select("date, time, endTime")
+      .eq("eventID", eventID)
+      .maybeSingle();
+
+    if (eventError) throw eventError;
+
+    if (!event) {
+      return res.status(404).json({
+        error: "Event not found.",
+      });
+    }
+
+
+    if (!event.endTime) {
+      return res.status(403).json({
+        error: "Feedback is unavailable because this event has no end time.",
+      });
+    }
+
+    const { data: eventHasEnded, error: timeError } = await req.db.rpc(
+      "event_has_ended",
+      { target_event_id: eventID },
+    );
+
+    if (timeError) throw timeError;
+
+    if (!eventHasEnded) {
+      return res.status(403).json({
+        error: "You can submit feedback only after the event has ended.",
+      });
+    }
+
 
     const { error } = await req.db.from("Event Reviews").insert({
       eventID,
