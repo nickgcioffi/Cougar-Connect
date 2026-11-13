@@ -7,6 +7,7 @@ import {
   revealPage,
   setAccountBadge,
 } from "../shared/ui.js";
+import { campusDate, hasEventEnded } from "../shared/event-time.js";
 
 const context = await requireAccount();
 if (!context) throw new Error("Authentication required");
@@ -16,8 +17,9 @@ if (setupPage) window.location.replace(setupPage);
 setAccountBadge(account);
 initializeSearch(account);
 
-let month = new Date().getMonth();
-let year = new Date().getFullYear();
+const today = campusDate();
+let month = Number(today.slice(5, 7)) - 1;
+let year = Number(today.slice(0, 4));
 const filters = {};
 const addOptions = (selector, values) =>
   values.forEach((value) =>
@@ -73,7 +75,7 @@ function renderCalendar() {
           ? `<h3>${new Date(`${event.date}T12:00`).toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" })}</h3>`
           : "";
       lastDate = event.date;
-      return `${heading}<button class="agenda-event" data-event-id="${event.id}">
+      return `${heading}<button class="agenda-event${hasEventEnded(event) ? " event-ended" : ""}" data-event-id="${event.id}">
       <span class="agenda-time">${eventTime(event)}</span>
       <span><strong>${escapeHtml(event.name)}</strong><small>${escapeHtml(event.location)} · ${escapeHtml(event.org)}</small>${event.external ? "<small>External · BYU Clubs</small>" : ""}</span>
       <span aria-hidden="true">›</span></button>`;
@@ -131,5 +133,13 @@ document.querySelector("#showMonth").onclick = () => {
   document.querySelector("#agendaDate").value = "";
   renderCalendar();
 };
+
+document.querySelector("#monthTitle").insertAdjacentHTML(
+  "afterend",
+  '<p class="calendar-past-note">Past events appear in grey.</p>',
+);
 renderCalendar();
 revealPage();
+
+window.setInterval(renderCalendar, 60_000);
+window.addEventListener("focus", renderCalendar);

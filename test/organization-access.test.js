@@ -8,6 +8,7 @@ import { once } from "node:events";
 import { mkdtemp, writeFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { pathToFileURL } from "node:url";
 
 const applicant = {
   firstName: " Test ",
@@ -161,7 +162,11 @@ test("organization access submission, AI review, persistence, and email", async 
   );
   const children = [];
   async function start(overrides = {}) {
-    const child = spawn(process.execPath, ["--import", preload, "server.js"], {
+    const child = spawn(process.execPath, [
+  "--import",
+  pathToFileURL(preload).href,
+  "server.js",
+], {
       cwd: new URL("..", import.meta.url),
       env: {
         ...process.env,
@@ -180,6 +185,9 @@ test("organization access submission, AI review, persistence, and email", async 
       stdio: ["ignore", "pipe", "pipe"],
     });
     children.push(child);
+    child.stderr.on("data", (data) => {
+  console.error(data.toString());
+  });
     // Read the ephemeral listening port reported by the application.
     const output = await Promise.race([
       once(child.stdout, "data"),

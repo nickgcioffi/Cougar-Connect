@@ -2,6 +2,7 @@ import { nextSetupPage, requireAccount } from "../shared/auth.js";
 import { bindEventCards } from "../shared/events.js";
 import { initializeSearch } from "../shared/search.js";
 import { escapeHtml, revealPage, setAccountBadge } from "../shared/ui.js";
+import { campusDate, hasEventEnded } from "../shared/event-time.js";
 
 const context = await requireAccount();
 if (!context) throw new Error("Authentication required");
@@ -11,8 +12,9 @@ if (setupPage) window.location.replace(setupPage);
 setAccountBadge(account);
 initializeSearch(account);
 
-let month = new Date().getMonth();
-let year = new Date().getFullYear();
+const today = campusDate();
+let month = Number(today.slice(5, 7)) - 1;
+let year = Number(today.slice(0, 4));
 const filters = {};
 const addOptions = (selector, values) =>
   values.forEach((value) =>
@@ -61,7 +63,7 @@ function renderCalendar() {
         .filter((event) => event.date === date)
         .map(
           (event) =>
-            `<button class="calEvent" data-event-id="${event.id}">${event.external ? "External · " : ""}${escapeHtml(event.name)}</button>`,
+            `<button class="calEvent${hasEventEnded(event) ? " event-ended" : ""}" data-event-id="${event.id}">${event.external ? "External · " : ""}${escapeHtml(event.name)}</button>`,
         )
         .join("");
       return `<div class="day">${day}${buttons}</div>`;
@@ -108,5 +110,14 @@ document.querySelector("#nextMonth").onclick = () => {
   }
   renderCalendar();
 };
+
+document.querySelector("#calendarGrid").insertAdjacentHTML(
+  "afterend",
+  '<p class="calendar-past-note">Past events appear in grey.</p>',
+);
 renderCalendar();
 revealPage();
+
+window.setInterval(renderCalendar, 60_000);
+window.addEventListener("focus", renderCalendar);
+
