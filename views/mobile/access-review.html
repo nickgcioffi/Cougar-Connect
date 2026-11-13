@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="cc-view" content="mobile" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover"
+    />
+    <script defer src="/js/shared/view-routing.js"></script>
+    <title>Review organization access · Cougar Connect</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="stylesheet" href="/css/mobile.css" />
+    <link rel="stylesheet" href="/css/operator.css" />
+  </head>
+  <body data-mobile="true" class="operator-page">
+    <header>
+      <a class="brand" href="/home">cougar<span class="light">connect</span></a>
+    </header>
+    <main>
+      <a href="/settings">← Settings</a>
+      <h1>Review organization access</h1>
+      <p id="reviewStatus" role="status"></p>
+      <section class="panel" id="organizationCreation" hidden>
+        <h2>Add organization</h2>
+        <p>
+          If the organization is missing from the approval list, add it here
+          before approving access.
+        </p>
+        <form id="createOrganizationForm">
+          <label for="newOrganizationName">Organization name</label>
+          <input
+            id="newOrganizationName"
+            name="name"
+            maxlength="150"
+            required
+          />
+          <button type="submit">Add organization</button>
+          <p id="organizationStatus" role="status"></p>
+        </form>
+      </section>
+      <div id="accessReviews"></div>
+    </main>
+    <script src="/js/vendor/supabase.js"></script>
+    <script type="module" src="/js/pages/access-review.js"></script>
+  </body>
+</html>

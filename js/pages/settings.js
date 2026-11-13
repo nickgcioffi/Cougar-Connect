@@ -9,6 +9,23 @@ const { account, session, supabase } = context;
 const setupPage = nextSetupPage(account);
 if (setupPage) window.location.replace(setupPage);
 setAccountBadge(account);
+document.querySelector("#clubSettings").hidden =
+  account.role !== "organization_admin";
+document.querySelector("#operatorSettings").hidden =
+  account.role !== "operator";
+if (account.role === "organization_admin") {
+  const clubs = document.querySelector("#assignedClubs");
+  for (const club of account.admins) {
+    const item = document.createElement("li");
+    item.textContent = club.name;
+    clubs.append(item);
+  }
+  if (!account.admins.length) {
+    const item = document.createElement("li");
+    item.textContent = "No clubs are currently assigned to your account.";
+    clubs.append(item);
+  }
+}
 initializeSearch(account);
 document.querySelector("#profileName").textContent = account.profile.name;
 document.querySelector("#profileDetails").textContent =

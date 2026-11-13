@@ -406,3 +406,8 @@ body[data-mobile] .landing-header .mobile-admin-access {
     max-width: none;
   }
 }
+body[data-mobile] .landing-header .landing-session {
+  grid-column: 1 / -1;
+  font-size: 12px;
+  padding: 4px 0;
+}

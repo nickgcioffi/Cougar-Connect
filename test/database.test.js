@@ -184,6 +184,9 @@ test("database migrations, RPC validation, persistence and RLS", async (t) => {
         0,
       );
     });
+    await db.exec(
+      `update public."User" set role='organization_admin' where "authUserID"='${alice}'`,
+    );
     const event = {
       name: "Meeting",
       location: "Campus",
@@ -270,15 +273,9 @@ test("database migrations, RPC validation, persistence and RLS", async (t) => {
         { ...event, orgID: 2 },
       ],
     ]) {
-      await t.test(
-        name,
-        {
-          todo: "Migration 002 grants event mutations to every authenticated user.",
-        },
-        async () => {
-          await assert.rejects(probe(id, rpcName, payload));
-        },
-      );
+      await t.test(name, async () => {
+        await assert.rejects(probe(id, rpcName, payload));
+      });
     }
     await db.exec(
       `insert into public."Events"(name,date,time,"orgID") values ('Other event','2035-01-01','18:00',2)`,
@@ -290,7 +287,6 @@ test("database migrations, RPC validation, persistence and RLS", async (t) => {
     ).rows[0].eventID;
     await t.test(
       "admins cannot cancel events for an unassigned organization",
-      { todo: "Organization membership is not enforced by cancel_event." },
       async () => {
         await assert.rejects(probe(alice, "cancel_event", { id: otherEvent }));
       },
@@ -328,6 +324,211 @@ test("database migrations, RPC validation, persistence and RLS", async (t) => {
             .length,
           0,
         );
+      },
+    );
+    await t.test(
+      "operator decisions atomically grant scoped access and revocation removes it",
+      async () => {
+        const operatorID = "00000000-0000-4000-8000-000000000003";
+        await db.query("insert into auth.users values ($1)", [operatorID]);
+        await rpc(operatorID, "save_profile", {
+          ...profile,
+          name: "Site Operator",
+        });
+        await db.query(
+          `update public."User" set role='operator' where "authUserID"=$1`,
+          [operatorID],
+        );
+        await assert.rejects(
+          asUser(bob, "select public.create_organization('New Club')"),
+        );
+        await assert.rejects(
+          asUser(operatorID, "select public.create_organization('   ')"),
+        );
+        const created = (
+          await asUser(
+            operatorID,
+            "select public.create_organization($1) as result",
+            ["  New   Club  "],
+          )
+        ).rows[0].result;
+        assert.equal(created.created, true);
+        assert.equal(created.organization.name, "New Club");
+        const duplicate = (
+          await asUser(
+            operatorID,
+            "select public.create_organization('new club') as result",
+          )
+        ).rows[0].result;
+        assert.equal(duplicate.created, false);
+        assert.equal(duplicate.organization.id, created.organization.id);
+        assert.equal(
+          (
+            await asUser(bob, "select public.administers($1) as allowed", [
+              created.organization.id,
+            ])
+          ).rows[0].allowed,
+          false,
+        );
+        const inserted = await db.query(
+          `insert into public."Organization Access Requests"("authUserID","firstName","lastName",email,organization,position,reason,status) values ($1,'Other','Person','test@example.invalid','Test Club','Officer','Manage events','Needs Review') returning "requestID"`,
+          [bob],
+        );
+        const rid = inserted.rows[0].requestID;
+        assert.equal(
+          (
+            await asUser(
+              alice,
+              'select * from public."Organization Access Requests"',
+            )
+          ).rows.length,
+          0,
+        );
+        assert.equal(
+          (
+            await asUser(
+              bob,
+              'select * from public."Organization Access Requests"',
+            )
+          ).rows.length,
+          1,
+        );
+        await assert.rejects(
+          asUser(
+            alice,
+            "select public.decide_access_request($1,'Approved',1)",
+            [rid],
+          ),
+        );
+        await assert.rejects(
+          asUser(
+            operatorID,
+            "select public.decide_access_request($1,'Approved',99999)",
+            [rid],
+          ),
+        );
+        assert.equal(
+          (
+            await db.query(
+              'select status from public."Organization Access Requests" where "requestID"=$1',
+              [rid],
+            )
+          ).rows[0].status,
+          "Needs Review",
+        );
+        await asUser(
+          operatorID,
+          "select public.decide_access_request($1,'Approved',1)",
+          [rid],
+        );
+        assert.equal(
+          (await asUser(bob, 'select role from public."User"')).rows[0].role,
+          "organization_admin",
+        );
+        assert.equal(
+          (await asUser(bob, "select public.administers(1) as allowed")).rows[0]
+            .allowed,
+          true,
+        );
+        assert.equal(
+          (await asUser(bob, "select public.administers(2) as allowed")).rows[0]
+            .allowed,
+          false,
+        );
+        await assert.rejects(
+          asUser(
+            operatorID,
+            "select public.decide_access_request($1,'Rejected',null)",
+            [rid],
+          ),
+        );
+        await assert.rejects(
+          asUser(bob, "select public.revoke_organization_access($1,1)", [
+            alice,
+          ]),
+        );
+        await asUser(
+          operatorID,
+          "select public.revoke_organization_access($1,1)",
+          [bob],
+        );
+        assert.equal(
+          (await asUser(bob, 'select role from public."User"')).rows[0].role,
+          "user",
+        );
+        assert.equal(
+          (await asUser(bob, "select public.administers(1) as allowed")).rows[0]
+            .allowed,
+          false,
+        );
+        await asUser(
+          operatorID,
+          "select public.revoke_organization_access($1,1)",
+          [operatorID],
+        );
+        assert.equal(
+          (await asUser(operatorID, 'select role from public."User"')).rows[0]
+            .role,
+          "operator",
+        );
+      },
+    );
+    await t.test(
+      "daily request quota permits three, counts all outcomes, and resets by Mountain date",
+      async () => {
+        const payload = {
+          firstName: "Test",
+          lastName: "Applicant",
+          email: "test@example.invalid",
+          organization: "Test Club",
+          position: "Officer",
+          reason: "Manage events",
+        };
+        const submit = async (id) => {
+          await db.exec("begin; set local role service_role;");
+          try {
+            const result = await db.query(
+              "select public.submit_access_request($1,$2::jsonb) as result",
+              [id, JSON.stringify(payload)],
+            );
+            await db.exec("commit");
+            return result.rows[0].result;
+          } catch (error) {
+            await db.exec("rollback");
+            throw error;
+          }
+        };
+        await assert.rejects(
+          asUser(alice, "select public.submit_access_request($1,$2::jsonb)", [
+            alice,
+            JSON.stringify(payload),
+          ]),
+        );
+        for (let i = 0; i < 3; i++) {
+          const r = await submit(alice);
+          assert.equal(r.remaining, 2 - i);
+        }
+        await db.query(
+          `update public."Organization Access Requests" set status='Rejected' where "authUserID"=$1`,
+          [alice],
+        );
+        await assert.rejects(submit(alice), (error) => error.code === "P0429");
+        assert.equal(
+          (
+            await db.query(
+              'select count(*)::int as count from public."Organization Access Requests" where "authUserID"=$1',
+              [alice],
+            )
+          ).rows[0].count,
+          3,
+        );
+        // Earlier Mountain dates do not consume today's quota; no rolling 24-hour window.
+        await db.query(
+          `update public."Organization Access Requests" set "createdAt"=(date_trunc('day',now() at time zone 'America/Denver') at time zone 'America/Denver')-interval '1 second' where "authUserID"=$1`,
+          [alice],
+        );
+        assert.equal((await submit(alice)).remaining, 2);
+        assert.ok((await submit(bob)).requestID);
       },
     );
     await t.test(

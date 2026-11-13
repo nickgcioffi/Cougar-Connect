@@ -1,3 +1,4 @@
+import { finishSetupDestination } from "../shared/return-path.js";
 import { requireAccount } from "../shared/auth.js";
 import { runAction } from "../shared/api.js";
 import { escapeHtml, revealPage, showToast } from "../shared/ui.js";
@@ -48,7 +49,7 @@ function renderChoices() {
 saveButton.onclick = async () => {
   try {
     await runAction("interests", selected);
-    window.location.assign(editing ? "/settings" : "/home");
+    window.location.assign(editing ? "/settings" : finishSetupDestination());
   } catch (error) {
     showToast(error.message);
   }

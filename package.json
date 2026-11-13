@@ -6,7 +6,7 @@
   "scripts": {
     "build": "esbuild js/auth-client.js --bundle --format=iife --outfile=js/vendor/supabase.js",
     "format": "prettier --write views js server.js test docs",
-    "start": "node --env-file-if-exists=.env server.js",
+    "start": "node --env-file-if-exists=.env --env-file-if-exists=ai.env server.js",
     "check:openai": "node --env-file-if-exists=.env --env-file-if-exists=ai.env scripts/check-openai.js",
     "test": "node --test test/*.test.js",
     "test:browser": "playwright test",

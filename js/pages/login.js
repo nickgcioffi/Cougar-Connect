@@ -1,8 +1,14 @@
+import {
+  authDestination,
+  rememberRequestReturn,
+} from "../shared/return-path.js";
 import { initializeSupabase } from "../shared/api.js";
 import { revealPage, showToast } from "../shared/ui.js";
 
 // Read this before Supabase processes the reset link.
 const params = new URLSearchParams(location.search);
+if (params.get("next") === "/request-organization-access")
+  rememberRequestReturn();
 const hash = new URLSearchParams(location.hash.slice(1));
 
 let recoveryMode =
@@ -23,8 +29,7 @@ const sendButton = document.querySelector("#sendResetLink");
 function showRecoveryForm() {
   recoveryMode = true;
 
-  document.querySelector("#authTitle").textContent =
-    "Choose a new password";
+  document.querySelector("#authTitle").textContent = "Choose a new password";
 
   const emailLabel = document.querySelector("#emailLabel");
   emailLabel.hidden = true;
@@ -33,8 +38,7 @@ function showRecoveryForm() {
 
   document.querySelector("#createAccount")?.setAttribute("hidden", "");
   document.querySelector("#resetPassword")?.setAttribute("hidden", "");
-  authForm.querySelector('a[href="/admin-login"]')
-    ?.setAttribute("hidden", "");
+  authForm.querySelector('a[href="/admin-login"]')?.setAttribute("hidden", "");
 
   passwordInput.closest("label").firstChild.textContent = "New password";
   passwordInput.autocomplete = "new-password";
@@ -69,7 +73,7 @@ if (recoveryMode) showRecoveryForm();
 const { data } = await supabase.auth.getSession();
 
 if (data.session && !recoveryMode) {
-  window.location.replace("/home");
+  window.location.replace(recoveryMode ? "/home" : authDestination());
 } else {
   revealPage();
 
@@ -104,7 +108,7 @@ authForm.addEventListener("submit", async (event) => {
 
       if (error || !data.session) {
         throw new Error(
-          "Your reset link expired. Return to Sign in and request a new one."
+          "Your reset link expired. Return to Sign in and request a new one.",
         );
       }
 
@@ -115,7 +119,7 @@ authForm.addEventListener("submit", async (event) => {
       if (result.error) throw result.error;
 
       showToast("Password updated! Opening your home page...");
-      window.location.replace("/home");
+      window.location.replace(recoveryMode ? "/home" : authDestination());
       return;
     }
 
@@ -124,7 +128,12 @@ authForm.addEventListener("submit", async (event) => {
         ? await supabase.auth.signUp({
             email: values.email,
             password: values.password,
-            options: { emailRedirectTo: location.origin },
+            options: {
+              emailRedirectTo:
+                authDestination() === "/request-organization-access"
+                  ? `${location.origin}/login?next=/request-organization-access`
+                  : location.origin,
+            },
           })
         : await supabase.auth.signInWithPassword({
             email: values.email,
@@ -134,22 +143,19 @@ authForm.addEventListener("submit", async (event) => {
     if (result.error) throw result.error;
 
     if (result.data.session) {
-      window.location.assign("/home");
+      window.location.assign(authDestination());
     } else {
       showToast("Check your email to confirm your account, then sign in.");
     }
-
-  } catch(error) {
+  } catch (error) {
     if (
       error.code === "user_already_exists" ||
       error.message?.toLowerCase().includes("already registered")
-    ){
-      showToast(
-        "You already have an account! Please sign in to continue."
-      );
+    ) {
+      showToast("You already have an account! Please sign in to continue.");
     } else {
       showToast(error.message);
-    }  
+    }
   } finally {
     authButton.disabled = false;
   }
@@ -169,9 +175,11 @@ document.querySelector("#resetPassword")?.addEventListener("click", () => {
   resetEmail.focus();
 });
 
-document.querySelector("#closeForgotPassword")?.addEventListener("click", () => {
-  dialog.close();
-});
+document
+  .querySelector("#closeForgotPassword")
+  ?.addEventListener("click", () => {
+    dialog.close();
+  });
 
 // Send the recovery email using the popup's email field.
 resetForm?.addEventListener("submit", async (event) => {
@@ -186,7 +194,7 @@ resetForm?.addEventListener("submit", async (event) => {
       resetEmail.value.trim(),
       {
         redirectTo: `${location.origin}/login?reset=1`,
-      }
+      },
     );
 
     if (error) throw error;

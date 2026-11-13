@@ -86,10 +86,12 @@ async function fixture(page, { profile = true, signedIn = true } = {}) {
       if (action === "save") account.saved = payload.saved ? [payload.id] : [];
       return route.fulfill({ json: { ok: true } });
     }
+    if (url.pathname === "/api/organization-access-requests")
+      return route.fulfill({ json: { requests: [], remaining: 3, limit: 3 } });
     if (url.pathname === "/api/organization-access-request")
       return route.fulfill({
         status: 201,
-        json: { ok: true, status: "Pended", notificationSent: true },
+        json: { ok: true, status: "Needs Review", notificationSent: true },
       });
     return route.fulfill({
       status: 404,
@@ -224,9 +226,6 @@ test("request access form displays the persisted outcome and email status", asyn
   await fixture(page);
   await page.goto("/request-organization-access");
   for (const [name, value] of Object.entries({
-    firstName: "Test",
-    lastName: "Applicant",
-    email: "test@example.invalid",
     organization: "Test Club",
     position: "Officer",
     reason: "Publish events",
@@ -300,4 +299,298 @@ test("mobile landing header offers admin access at phone widths", async ({
     await action.click();
     await expect(page).toHaveURL(/request-organization-access/);
   }
+});
+
+test("landing reflects the remembered session and clears it after sign out", async ({
+  page,
+}) => {
+  await fixture(page);
+  await page.goto("/");
+  await expect(page.locator("#landingSession")).toContainText(
+    "Signed in as Test",
+  );
+  const mobile = await page.locator("body").getAttribute("data-mobile");
+  if (mobile) {
+    await expect(page.locator("#landingSession")).toHaveAttribute(
+      "href",
+      "/home",
+    );
+    await expect(page.locator("#landingSession")).toContainText("Open app");
+  } else {
+    await expect(page.locator("#landingSession")).toHaveJSProperty(
+      "tagName",
+      "SPAN",
+    );
+    await expect(page.locator("#landingSession")).toHaveText(
+      "Signed in as Test",
+    );
+  }
+  await expect(page.locator('.cc-actions a[href="/home"]')).toHaveText(
+    "Open Cougar Connect",
+  );
+  await page.reload();
+  await expect(page.locator("#landingSession")).toBeVisible();
+  expect(
+    (await page.context().cookies()).some(
+      (c) => c.name === "cc_signed_in" && c.value === "1",
+    ),
+  ).toBeTruthy();
+  await page.goto("/settings");
+  await page.locator("#signOut").click();
+  await page.goto("/");
+  await expect(page.locator("#landingSession")).toBeHidden();
+  await expect(page.locator('.cc-actions a[href="/signup"]')).toBeVisible();
+});
+
+test("access request returns through login and uses the account identity", async ({
+  page,
+}) => {
+  await fixture(page, { signedIn: false });
+  await page.goto("/request-organization-access");
+  await expect(page).toHaveURL(/\/login\?next=/);
+  await page.locator('[name="email"]').fill("test@example.invalid");
+  await page.locator('[name="password"]').fill("test-password");
+  await page.locator('button[name="action"]').click();
+  await expect(page).toHaveURL(/\/request-organization-access$/);
+  await expect(page.locator('[name="email"]')).toHaveValue(
+    "test@example.invalid",
+  );
+  await expect(page.locator('[name="email"]')).toHaveAttribute("readonly", "");
+  for (const [name, value] of Object.entries({
+    organization: "Test Club",
+    position: "Officer",
+    reason: "Manage our club events",
+  }))
+    await page.locator(`[name="${name}"]`).fill(value);
+  await page.locator("#submitRequest").click();
+  await expect(page.locator("#formMessage")).toContainText(
+    "pending human review",
+  );
+});
+
+test("operator can choose an organization, approve and revoke an assignment", async ({
+  page,
+}) => {
+  const { account } = await fixture(page);
+  account.role = "operator";
+  account.organizations = [{ id: 7, name: "Test Club" }];
+  let approved = false,
+    revoked = false;
+  await page.route("**/api/operator/**", async (route) => {
+    const path = new URL(route.request().url()).pathname;
+    if (path.endsWith("/decision")) {
+      expect(route.request().postDataJSON()).toEqual({
+        requestID: 1,
+        decision: "Approved",
+        orgID: 7,
+      });
+      approved = true;
+      return route.fulfill({ json: { ok: true, notificationSent: true } });
+    }
+    if (path.endsWith("/revoke")) {
+      revoked = true;
+      return route.fulfill({ json: { ok: true } });
+    }
+    return route.fulfill({
+      json: {
+        requests: [
+          {
+            requestID: 1,
+            firstName: "Test",
+            lastName: "Applicant",
+            email: "test@example.invalid",
+            organization: "Test Club",
+            position: "Officer",
+            reason: "Manage events",
+            status: approved ? "Approved" : "Needs Review",
+            aiRecommendation: "Approved",
+            aiRationale: "Plausible request",
+          },
+        ],
+        memberships:
+          approved && !revoked
+            ? [
+                {
+                  authUserID: "test-user",
+                  orgID: 7,
+                  Organization: { orgName: "Test Club" },
+                },
+              ]
+            : [],
+      },
+    });
+  });
+  page.on("dialog", (dialog) => dialog.accept());
+  await page.goto("/operator/access");
+  await page.getByLabel("Verified organization").selectOption("7");
+  await page.getByRole("button", { name: "Approve verified access" }).click();
+  await expect(page.locator("#reviewStatus")).toContainText("Decision saved");
+  await page
+    .getByRole("button", { name: "Revoke organization access" })
+    .click();
+  await expect(page.locator("#reviewStatus")).toContainText(
+    "assignment removed",
+  );
+  expect(approved && revoked).toBeTruthy();
+});
+
+for (const role of ["user", "organization_admin", "operator"]) {
+  test(`settings exposes the correct tools for ${role}`, async ({ page }) => {
+    const { account } = await fixture(page);
+    account.role = role;
+    account.admins = [
+      { id: 7, name: "Outdoor Club" },
+      { id: 8, name: "Music Club" },
+    ];
+    await page.goto("/settings");
+    await expect(page.locator("#profileName")).toHaveText("Test Applicant");
+    await expect(page.locator("#resetPassword")).toBeVisible();
+    if (role === "organization_admin") {
+      await expect(page.locator("#clubSettings")).toBeVisible();
+      await expect(page.locator("#assignedClubs li")).toHaveText([
+        "Outdoor Club",
+        "Music Club",
+      ]);
+      await expect(
+        page.getByRole("link", { name: "Club dashboard" }),
+      ).toHaveAttribute("href", "/admin");
+    } else {
+      await expect(page.locator("#clubSettings")).toBeHidden();
+      await expect(page.locator("#openAdmin")).toBeHidden();
+    }
+    if (role === "operator") {
+      await expect(page.locator("#operatorSettings")).toBeVisible();
+      await expect(
+        page.getByRole("link", { name: "Operator dashboard" }),
+      ).toHaveAttribute("href", "/operator/access");
+    } else {
+      await expect(page.locator("#operatorSettings")).toBeHidden();
+      await expect(page.locator("#openAccessReview")).toBeHidden();
+    }
+    await expect(
+      page.locator('main a[href="/request-organization-access"]'),
+    ).toHaveCount(0);
+  });
+}
+
+test("operator can add an organization and select it without losing a review choice", async ({
+  page,
+}) => {
+  const { account } = await fixture(page);
+  account.role = "operator";
+  account.organizations = [{ id: 7, name: "Test Club" }];
+  let created = false;
+  await page.route("**/api/operator/**", async (route) => {
+    const path = new URL(route.request().url()).pathname;
+    if (path.endsWith("/organizations")) {
+      expect(route.request().postDataJSON()).toEqual({ name: "New Club" });
+      return route
+        .fulfill({
+          json: {
+            created: !created,
+            organization: { id: 8, name: "New Club" },
+          },
+        })
+        .then(() => {
+          created = true;
+        });
+    }
+    return route.fulfill({
+      json: {
+        requests: [
+          {
+            requestID: 1,
+            firstName: "Test",
+            lastName: "Applicant",
+            email: "test@example.invalid",
+            organization: "New Club",
+            position: "Officer",
+            reason: "Manage events",
+            status: "Needs Review",
+          },
+        ],
+        memberships: [],
+      },
+    });
+  });
+  await page.goto("/operator/access");
+  const selection = page.getByLabel("Verified organization");
+  await selection.selectOption("7");
+  await page.getByLabel("Organization name", { exact: true }).fill("New Club");
+  await page
+    .getByRole("button", { name: "Add organization", exact: true })
+    .click();
+  await expect(page.locator("#organizationStatus")).toContainText(
+    "Added New Club",
+  );
+  await expect(selection).toHaveValue("7");
+  await selection.selectOption({ label: "New Club" });
+  await expect(selection).toHaveValue("8");
+  await page.getByLabel("Organization name", { exact: true }).fill("New Club");
+  await page
+    .getByRole("button", { name: "Add organization", exact: true })
+    .click();
+  await expect(page.locator("#organizationStatus")).toContainText(
+    "already exists",
+  );
+  await expect(selection.locator('option[value="8"]')).toHaveCount(1);
+});
+
+test("access requests show quota and prevent a fourth submission", async ({
+  page,
+}) => {
+  await fixture(page);
+  let used = 2,
+    submissions = 0;
+  await page.route("**/api/organization-access-requests", (route) =>
+    route.fulfill({ json: { remaining: 3 - used, limit: 3, requests: [] } }),
+  );
+  await page.route("**/api/organization-access-request", (route) => {
+    used++;
+    submissions++;
+    return route.fulfill({
+      status: 201,
+      json: { status: "Needs Review", notificationSent: false },
+    });
+  });
+  await page.goto("/request-organization-access");
+  await expect(page.locator("#requestQuota")).toContainText("1 of 3");
+  for (const [field, value] of Object.entries({
+    organization: "Test Club",
+    position: "Officer",
+    reason: "Manage club events",
+  }))
+    await page.locator(`[name="${field}"]`).fill(value);
+  await page.locator("#submitRequest").click();
+  await expect(page.locator("#requestQuota")).toContainText(
+    "Daily limit reached",
+  );
+  await expect(page.locator("#submitRequest")).toBeDisabled();
+  await page.reload();
+  await expect(page.locator("#submitRequest")).toBeDisabled();
+  expect(submissions).toBe(1);
+});
+
+test("landing waits for session validation before showing account links", async ({
+  page,
+}) => {
+  const { account } = await fixture(page);
+  let release;
+  const wait = new Promise((resolve) => {
+    release = resolve;
+  });
+  await page.route("**/api/state", async (route) => {
+    await wait;
+    await route.fulfill({ json: account });
+  });
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+  await expect(
+    page.getByRole("heading", { name: "Find your people. Make your plans." }),
+  ).toBeVisible();
+  const controls = page.locator(".cc-actions [data-landing-auth]");
+  await expect(controls.first()).toBeHidden();
+  release();
+  await expect(controls.first()).toHaveText("Open Cougar Connect");
+  await expect(controls.first()).toBeVisible();
+  await expect(controls.last()).toHaveText("Your account");
 });

@@ -1,4 +1,4 @@
-import { reviewOrganizationAccessRequest, sendOrganizationAccessNotification } from "./server/organization-access.js";
+import { registerAccessRoutes } from "./server/access-routes.js";
 import express from "express";
 import { createClient } from "@supabase/supabase-js";
 import { readFileSync } from "node:fs";
@@ -39,79 +39,8 @@ app.use((req, res, next) => {
 app.use(express.json({ limit: "32kb" }));
 app.get("/api/config", (req, res) => res.json({ url, key }));
 
-
-app.post("/api/organization-access-request", async (req, res, next) => {
-  try {
-    if (!adminDb) {
-      return res.status(503).json({
-        error: "Organization access requests are not configured.",
-      });
-    }
-
-    const {
-      firstName,
-      lastName,
-      email,
-      organization,
-      position,
-      reason,
-    } = req.body ?? {};
-
-    const fields = [
-      firstName,
-      lastName,
-      email,
-      organization,
-      position,
-      reason,
-    ];
-
-    if (fields.some((value) => typeof value !== "string" || !value.trim())) {
-      return res.status(400).json({
-        error: "Please complete all required fields.",
-      });
-    }
-
-    const request = {
-      firstName: firstName.trim(),
-      lastName: lastName.trim(),
-      email: email.trim().toLowerCase(),
-      organization: organization.trim(),
-      position: position.trim(),
-      reason: reason.trim(),
-    };
-    const review = await reviewOrganizationAccessRequest(request);
-
-    const { data, error } = await adminDb
-      .from("Organization Access Requests")
-      .insert({
-        ...request,
-        status: review.status,
-      })
-      .select("requestID")
-      .single();
-
-    if (error) throw error;
-
-    const notificationSent = await sendOrganizationAccessNotification(
-      request,
-      review.status,
-    );
-
-    res.status(201).json({
-      ok: true,
-      message: "Your organization access request was submitted successfully.",
-      requestID: data.requestID,
-      status: review.status,
-      notificationSent,
-    });
-  } catch (error) {
-    next(error);
-  }
-});
-
-
 app.use("/api", async (req, res, next) => {
+  res.set("Cache-Control", "private, no-store");
   const token = req.headers.authorization?.match(/^Bearer (.+)$/)?.[1];
   if (!token) return res.status(401).json({ error: "Sign in to continue." });
 
@@ -130,6 +59,8 @@ app.use("/api", async (req, res, next) => {
   req.user = data.user;
   next();
 });
+registerAccessRoutes(app, adminDb);
+
 const check = ({ data, error }) => {
   if (error) throw error;
   return data;
@@ -186,14 +117,18 @@ app.get("/api/state", async (req, res, next) => {
         bio: profile.biography,
         photo: profile.photoURL,
       },
+      role: profile?.role || "user",
       launch: profile?.launchPreference || "Home",
       interests: chosen.map((x) => x.Interest.name),
       saved: saved.map((x) => x.eventID),
       categories: interests.map((x) => x.name),
-      admins: admins.map((x) => ({
-        id: x.orgID,
-        name: x.Organization.orgName,
-      })),
+      admins:
+        profile?.role === "operator"
+          ? organizations.map((x) => ({ id: x.orgID, name: x.orgName }))
+          : admins.map((x) => ({
+              id: x.orgID,
+              name: x.Organization.orgName,
+            })),
       organizations: organizations.map((x) => ({
         id: x.orgID,
         name: x.orgName,
@@ -283,9 +218,9 @@ app.get("/api/events/search", async (req, res, next) => {
         )
         .slice(0, 8),
     );
-} catch (error) {
-  next(error);
-}
+  } catch (error) {
+    next(error);
+  }
 });
 app.post("/api/action", async (req, res, next) => {
   try {
@@ -337,7 +272,10 @@ app.get("/api/admin/reviews", async (req, res, next) => {
     const { data: reviews, error: reviewsError } = await req.db
       .from("Event Reviews")
       .select("reviewID, eventID, rating, comment, created_at")
-      .in("eventID", events.map((event) => event.eventID))
+      .in(
+        "eventID",
+        events.map((event) => event.eventID),
+      )
       .order("created_at", { ascending: false });
 
     if (reviewsError) throw reviewsError;
@@ -345,9 +283,8 @@ app.get("/api/admin/reviews", async (req, res, next) => {
     res.json({
       reviews: reviews.map((review) => ({
         ...review,
-        eventName: events.find(
-          (event) => event.eventID === review.eventID,
-        )?.name,
+        eventName: events.find((event) => event.eventID === review.eventID)
+          ?.name,
       })),
     });
   } catch (error) {
@@ -372,7 +309,6 @@ app.post("/api/reviews", async (req, res, next) => {
       });
     }
 
-
     const { data: event, error: eventError } = await req.db
       .from("Events")
       .select("date, time, endTime")
@@ -386,7 +322,6 @@ app.post("/api/reviews", async (req, res, next) => {
         error: "Event not found.",
       });
     }
-
 
     if (!event.endTime) {
       return res.status(403).json({
@@ -406,7 +341,6 @@ app.post("/api/reviews", async (req, res, next) => {
         error: "You can submit feedback only after the event has ended.",
       });
     }
-
 
     const { error } = await req.db.from("Event Reviews").insert({
       eventID,
@@ -511,6 +445,7 @@ const views = {
   "/settings": "settings.html",
   "/admin-login": "admin-login.html",
   "/admin": "admin.html",
+  "/operator/access": "access-review.html",
 };
 
 const mobileHost = "mobile.cougarconnect.app";
@@ -591,12 +526,19 @@ app.use((error, req, res, next) => {
   let status = 500;
   let message = "Unable to complete the request. Please try again.";
 
-  if (error.type === "entity.parse.failed") {
+  if (error.publicMessage && [400, 403, 503].includes(error.status)) {
+    status = error.status;
+    message = error.message;
+  } else if (error.type === "entity.parse.failed") {
     status = 400;
     message = "The request contains invalid JSON.";
   } else if (error.type === "entity.too.large") {
     status = 413;
     message = "The request is too large.";
+  } else if (error.code === "P0429") {
+    status = 429;
+    message =
+      "You have reached the limit of 3 requests per day. Try again after midnight Mountain Time.";
   } else if (error.code === "42501") {
     status = 403;
     message = "You do not have permission to perform this action.";
@@ -604,7 +546,7 @@ app.use((error, req, res, next) => {
     status = 409;
     message = "This information conflicts with an existing record.";
   } else if (
-    ["22P02", "23502", "23503", "23514"].includes(error.code)
+    ["22023", "22P02", "23502", "23503", "23514"].includes(error.code)
   ) {
     status = 400;
     message = "Some submitted information is invalid. Check your entries.";
