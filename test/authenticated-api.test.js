@@ -14,6 +14,7 @@ const event = {
   type: "Meeting",
   date: "2026-11-20",
   time: "18:00:00",
+  endTime: "19:00:00",
   location: "Campus",
   description: "Details",
 };
@@ -30,6 +31,7 @@ test("authenticated application workflows", async (t) => {
     const path = decodeURIComponent(url.pathname);
     calls.push({
       path,
+      method: req.method,
       query: url.searchParams,
       body,
       token: req.headers.authorization,
@@ -68,6 +70,8 @@ test("authenticated application workflows", async (t) => {
     if (path.startsWith("/auth/v1/admin/users/")) return reply({});
     if (path.startsWith("/rest/v1/rpc/")) {
       if (scenario.rpcError) return fail(scenario.rpcError);
+      if (path === "/rest/v1/rpc/event_has_ended")
+        return reply(!scenario.eventNotEnded);
       if (path.endsWith("save_profile")) {
         const p = body.payload;
         profile = {
@@ -97,7 +101,10 @@ test("authenticated application workflows", async (t) => {
       );
     if (table === "Organization")
       return reply([{ orgID: 7, orgName: "Test Club" }]);
-    if (table === "Events") return reply([event]);
+    if (table === "Events")
+      return reply([
+        { ...event, endTime: scenario.noEndTime ? null : event.endTime },
+      ]);
     if (table === "Event Reviews") {
       if (req.method === "POST") return reply(null, 201);
       return reply([
@@ -291,6 +298,35 @@ test("authenticated application workflows", async (t) => {
         }
       },
     );
+    for (const [name, state] of [
+      ["missing end time", { noEndTime: true }],
+      ["event not ended", { eventNotEnded: true }],
+    ]) {
+      await t.test(
+        `reviews reject ${name} without inserting feedback`,
+        async () => {
+          scenario = state;
+          calls = [];
+          try {
+            assert.equal(
+              (await request("/api/reviews", { eventID: 12, rating: 5 }))
+                .status,
+              403,
+            );
+            assert.equal(
+              calls.some(
+                (call) =>
+                  call.path === "/rest/v1/Event Reviews" &&
+                  call.method === "POST",
+              ),
+              false,
+            );
+          } finally {
+            scenario = {};
+          }
+        },
+      );
+    }
     await t.test(
       "reviews use authenticated identity and trim comments",
       async () => {
@@ -306,13 +342,23 @@ test("authenticated application workflows", async (t) => {
           ).status,
           201,
         );
-        assert.deepEqual(calls[1].body, {
+        const insert = calls.find(
+          (call) =>
+            call.path === "/rest/v1/Event Reviews" && call.method === "POST",
+        );
+        assert.ok(insert, "Review should be inserted after eligibility checks");
+        const ended = calls.find(
+          (call) => call.path === "/rest/v1/rpc/event_has_ended",
+        );
+        assert.deepEqual(ended.body, { target_event_id: 12 });
+        assert.equal(ended.token, "Bearer valid");
+        assert.deepEqual(insert.body, {
           eventID: 12,
           rating: 5,
           comment: "Great",
           authUserID: userID,
         });
-        assert.equal(calls[1].token, "Bearer valid");
+        assert.equal(insert.token, "Bearer valid");
       },
     );
     await t.test(
