@@ -8,11 +8,33 @@ export function eventCard(event, saved) {
 
 export function eventCards(events, savedIds) {
   return events.length
-    ? `<div class="cards">${events.map((event) => eventCard(event, savedIds.includes(event.id))).join("")}</div>`
+    ? `<div class="cards">${events
+        .map((event) => {
+          const saved = savedIds.includes(event.id);
+          const card = eventCard(event, saved);
+          if (!document.body.hasAttribute("data-mobile") || event.external)
+            return card;
+          return `<article class="mobile-event-card">${card}<button class="mobile-save" data-save-id="${event.id}" aria-pressed="${saved}">${saved ? "♥ Saved" : "♡ Save event"}<span class="sr-only">: ${escapeHtml(event.name)}</span></button></article>`;
+        })
+        .join("")}</div>`
     : '<div class="panel empty">No events found.</div>';
 }
 
 export function bindEventCards(account, onChange) {
+  document.querySelectorAll("[data-save-id]").forEach((button) => {
+    button.onclick = async () => {
+      button.disabled = true;
+      try {
+        const id = Number(button.dataset.saveId);
+        await runAction("save", { id, saved: !account.saved.includes(id) });
+        await onChange();
+      } catch (error) {
+        showToast(error.message);
+      } finally {
+        button.disabled = false;
+      }
+    };
+  });
   document.querySelectorAll("[data-event-id]").forEach((button) => {
     button.onclick = () =>
       openEvent(account, Number(button.dataset.eventId), onChange);
@@ -31,11 +53,11 @@ export function openEvent(account, id, onChange) {
   // Show feedback form for past, non-external events.
   const eventStart = eventTimestamp(event.date, event.time);
 
-const eventEnd = event.endTime
-  ? eventTimestamp(event.date, event.endTime)
-  : new Date(eventStart.getTime() + 60 * 60 * 1000);
+  const eventEnd = event.endTime
+    ? eventTimestamp(event.date, event.endTime)
+    : new Date(eventStart.getTime() + 60 * 60 * 1000);
 
-const canReview = !event.external && eventEnd < new Date();
+  const canReview = !event.external && eventEnd < new Date();
   if (canReview) {
     dialog.insertAdjacentHTML(
       "beforeend",
@@ -72,32 +94,31 @@ const canReview = !event.external && eventEnd < new Date();
     );
   }
 
+  const reviewForm = $("#eventReviewForm");
 
-const reviewForm = $("#eventReviewForm");
+  if (reviewForm) {
+    reviewForm.onsubmit = async (submitEvent) => {
+      submitEvent.preventDefault();
 
-if (reviewForm) {
-  reviewForm.onsubmit = async (submitEvent) => {
-    submitEvent.preventDefault();
+      const submitButton = reviewForm.querySelector('button[type="submit"]');
+      submitButton.disabled = true;
 
-    const submitButton = reviewForm.querySelector('button[type="submit"]');
-    submitButton.disabled = true;
+      try {
+        await apiRequest("reviews", {
+          eventID: Number(event.id),
+          rating: Number(reviewForm.elements.namedItem("rating").value),
+          comment: reviewForm.elements.namedItem("comment").value,
+        });
 
-    try {
-      await apiRequest("reviews", {
-        eventID: Number(event.id),
-        rating: Number(reviewForm.elements.namedItem("rating").value),
-        comment: reviewForm.elements.namedItem("comment").value,
-      });
-
-      dialog.close();
-      showToast("Feedback submitted successfully");
-    } catch (error) {
-      showToast(error.message);
-    } finally {
-      submitButton.disabled = false;
-    }
-  };
-}
+        dialog.close();
+        showToast("Feedback submitted successfully");
+      } catch (error) {
+        showToast(error.message);
+      } finally {
+        submitButton.disabled = false;
+      }
+    };
+  }
 
   dialog.showModal();
   $("#closeDetail").onclick = () => dialog.close();

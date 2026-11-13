@@ -3,12 +3,16 @@
   <head>
     <meta charset="utf-8" />
     <meta name="cc-view" content="mobile" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover"
+    />
     <script defer src="/js/shared/view-routing.js"></script>
     <title>Calendar · Cougar Connect</title>
     <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="stylesheet" href="/css/mobile.css" />
   </head>
-  <body class="page-loading">
+  <body data-mobile="true" class="page-loading">
     <header>
       <a class="brand" href="/home"
         ><img
@@ -42,32 +46,39 @@
     <main>
       <div class="eyebrow">YOUR CAMPUS AT A GLANCE</div>
       <h1>Make some plans.</h1>
-      <div class="filters">
-        <select id="genreFilter" aria-label="Interest">
-          <option value="">All interests</option></select
-        ><select id="typeFilter" aria-label="Type">
-          <option value="">All event types</option>
-          <option>Professional</option>
-          <option>Social</option></select
-        ><select id="locationFilter" aria-label="Location">
-          <option value="">All locations</option></select
-        ><select id="organizationFilter" aria-label="Organization">
-          <option value="">All organizations</option></select
-        ><select id="timeFilter" aria-label="Time">
-          <option value="">Any time</option>
-          <option>Before 5 PM</option>
-          <option>5 PM or later</option></select
-        ><button id="clearFilters">Reset filters</button>
-      </div>
+      <details class="mobile-filters">
+        <summary>Filter events <span aria-hidden="true">＋</span></summary>
+        <div class="filters">
+          <select id="genreFilter" aria-label="Interest">
+            <option value="">All interests</option></select
+          ><select id="typeFilter" aria-label="Type">
+            <option value="">All event types</option>
+            <option>Professional</option>
+            <option>Social</option></select
+          ><select id="locationFilter" aria-label="Location">
+            <option value="">All locations</option></select
+          ><select id="organizationFilter" aria-label="Organization">
+            <option value="">All organizations</option></select
+          ><select id="timeFilter" aria-label="Time">
+            <option value="">Any time</option>
+            <option>Before 5 PM</option>
+            <option>5 PM or later</option></select
+          ><button id="clearFilters">Reset filters</button>
+        </div>
+      </details>
       <div class="panel">
         <div class="topline">
           <h2 id="monthTitle"></h2>
           <div>
-            <button id="previousMonth">‹</button
-            ><button id="nextMonth">›</button>
+            <button id="previousMonth" aria-label="Previous month">‹</button
+            ><button id="nextMonth" aria-label="Next month">›</button>
           </div>
         </div>
-        <div id="calendarGrid" class="calendar"></div>
+        <label class="agenda-date"
+          >Jump to a day<input type="date" id="agendaDate"
+        /></label>
+        <button type="button" id="showMonth">Show whole month</button>
+        <div id="calendarGrid" class="mobile-agenda" aria-live="polite"></div>
       </div>
       <div id="emptyCalendar" class="empty" hidden>
         No events found for this month and these filters.
@@ -75,13 +86,14 @@
     </main>
     <nav aria-label="Main navigation">
       <a href="/home"><span>⌂</span>Home</a
-      ><a class="active" href="/calendar"><span>▦</span>Calendar</a
+      ><a class="active" aria-current="page" href="/calendar"
+        ><span>▦</span>Calendar</a
       ><a href="/feed"><span>▤</span>Feed</a
       ><a href="/settings"><span>⚙</span>Settings</a>
     </nav>
     <dialog id="detail"></dialog>
     <div id="toast" role="status"></div>
     <script src="/js/vendor/supabase.js"></script>
-    <script type="module" src="/js/pages/calendar.js"></script>
+    <script type="module" src="/js/pages/mobile-calendar.js"></script>
   </body>
 </html>
