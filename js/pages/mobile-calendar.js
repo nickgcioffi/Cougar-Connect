@@ -53,6 +53,11 @@ function renderCalendar() {
   ).toLocaleDateString("en-US", { month: "long", year: "numeric" });
   const prefix = `${year}-${String(month + 1).padStart(2, "0")}`;
   const selectedDate = document.querySelector("#agendaDate").value;
+  const showMonth = document.querySelector("#showMonth");
+  showMonth.disabled = !selectedDate;
+  showMonth.textContent = selectedDate
+    ? "Show whole month"
+    : "Showing whole month";
   const visible = events
     .filter(
       (event) =>

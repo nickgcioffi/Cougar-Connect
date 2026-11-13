@@ -249,6 +249,13 @@ test("mobile agenda opens details and saves an event with touch controls", async
   await expect(page.locator(".agenda-event")).toContainText(
     "Technology meetup",
   );
+  await expect(page.locator("#showMonth")).toBeDisabled();
+  await expect(page.locator("#showMonth")).toHaveText("Showing whole month");
+  await page.locator("#agendaDate").fill(account.events[0].date);
+  await expect(page.locator("#showMonth")).toBeEnabled();
+  await page.locator("#showMonth").click();
+  await expect(page.locator("#agendaDate")).toHaveValue("");
+  await expect(page.locator("#showMonth")).toBeDisabled();
   await page.locator("#agendaDate").fill(account.events[0].date);
   await page.locator(".agenda-event").click();
   await expect(page.locator("#detail")).toBeVisible();
@@ -266,4 +273,21 @@ test("mobile agenda opens details and saves an event with touch controls", async
     .first()
     .boundingBox();
   expect(nav.height).toBeGreaterThanOrEqual(48);
+});
+
+test("mobile landing header keeps menu beside brand at phone widths", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/views/mobile/index.html");
+  const brand = await page.locator(".landing-header .brand").boundingBox();
+  const menu = await page.locator(".feature-menu summary").boundingBox();
+  expect(
+    Math.abs(brand.y + brand.height / 2 - (menu.y + menu.height / 2)),
+  ).toBeLessThan(2);
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBeTruthy();
 });
