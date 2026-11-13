@@ -17,28 +17,9 @@
         <img class="mark" src="/assets/byu-logo.png" alt="BYU" width="62" height="40" />
         cougar<span class="light">connect</span>
       </a>
-      <details class="feature-menu">
-        <summary aria-label="Open navigation menu">
-          <span class="feature-menu-label">Explore features</span>
-          <span class="feature-menu-caret" aria-hidden="true">⌄</span>
-          <span class="feature-menu-icon" aria-hidden="true"></span>
-        </summary>
-        <nav aria-label="Explore Cougar Connect">
-          <a href="#discover">Discover events</a>
-          <a href="#search-events">Search events</a>
-          <a href="#save-events">Save your favorites</a>
-          <a href="#event-calendar">Plan your week</a>
-          <a href="#host-events">Host an event</a>
-          <a class="mobile-menu-link" href="/about">About the App</a>
-          <a class="mobile-menu-link" href="/request-organization-access">
-            Request Admin Access
-          </a>
-        </nav>
-      </details>
-      <a class="header-link" href="/about">About the App</a>
       <a class="header-link org-access" href="/request-organization-access">Request Admin Access</a>
       <div class="header-actions">
-        <a class="login-link" href="/login">Log in</a>
+        <a class="login-link" href="/login">Sign in</a>
         <a class="header-signup" href="/signup">Create account</a>
       </div>
     </header>
@@ -54,7 +35,6 @@
       <a class="brand" href="/">cougar<span class="light">connect</span></a>
       <span class="footer-note">BYU EVENTS · STUDENT PROTOTYPE</span>
       <nav class="footer-links" aria-label="Footer links">
-        <a href="/about">About the App</a>
         <a href="https://github.com/nickgcioffi/Cougar-Connect">GitHub</a>
         <details class="footer-team">
           <summary>The Team</summary>
@@ -66,12 +46,5 @@
         </details>
       </nav>
     </footer>
-    <script>
-      document.querySelectorAll(".feature-menu nav a").forEach((link) => {
-        link.addEventListener("click", () => {
-          document.querySelector(".feature-menu").removeAttribute("open");
-        });
-      });
-    </script>
   </body>
 </html>
