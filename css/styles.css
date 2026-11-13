@@ -1349,3 +1349,50 @@ select {
   color: #111827;
   font-weight: 600;
 }
+
+/* Past events remain readable and clickable. */
+.card.event-ended,
+.calEvent.event-ended,
+.agenda-event.event-ended {
+  background: #f1f3f5;
+  color: #4b5563;
+  border-color: #cbd5e1;
+}
+
+.card.event-ended .cardTop {
+  background: #e5e7eb;
+}
+
+.card.event-ended .tag {
+  background: #e5e7eb;
+  color: #4b5563;
+}
+
+.ended-label {
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: #e2e8f0;
+  color: #374151;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.past-saved-events {
+  margin: 20px 0 28px;
+}
+
+.past-saved-events summary {
+  cursor: pointer;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.calendar-past-note {
+  margin: 10px 0 0;
+  text-align: left;
+  color: #64748b;
+  font-size: 0.75rem;
+  font-weight: 400;
+}
+
