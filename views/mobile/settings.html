@@ -3,12 +3,13 @@
   <head>
     <meta charset="utf-8" />
     <meta name="cc-view" content="mobile" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
     <script defer src="/js/shared/view-routing.js"></script>
     <title>Settings · Cougar Connect</title>
     <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="stylesheet" href="/css/mobile.css" />
   </head>
-  <body class="page-loading">
+  <body data-mobile="true" class="page-loading">
     <header>
       <a class="brand" href="/home"
         ><img
@@ -86,7 +87,7 @@
       <a href="/home"><span>⌂</span>Home</a
       ><a href="/calendar"><span>▦</span>Calendar</a
       ><a href="/feed"><span>▤</span>Feed</a
-      ><a class="active" href="/settings"><span>⚙</span>Settings</a>
+      ><a class="active" aria-current="page" href="/settings"><span>⚙</span>Settings</a>
     </nav>
     <dialog id="deleteAccountDialog" aria-labelledby="deleteAccountTitle">
       <h2 id="deleteAccountTitle">Are you sure?</h2>

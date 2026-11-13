@@ -132,16 +132,14 @@ test("profile onboarding, photo upload, interest selection, refresh and relogin"
   await page.locator("[name=graduationYear]").selectOption("2030");
   await page.locator('[name=graduationMonth][value="04"]').check();
   await page.locator("[name=bio]").fill("Distinctive test biography");
-  await page
-    .locator("#photo")
-    .setInputFiles({
-      name: "avatar.png",
-      mimeType: "image/png",
-      buffer: Buffer.from(
-        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+j4S8AAAAASUVORK5CYII=",
-        "base64",
-      ),
-    });
+  await page.locator("#photo").setInputFiles({
+    name: "avatar.png",
+    mimeType: "image/png",
+    buffer: Buffer.from(
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+j4S8AAAAASUVORK5CYII=",
+      "base64",
+    ),
+  });
   await page.locator("#profileForm button").click();
   await expect(page).toHaveURL(/\/interests$/);
   await expect(page.locator("#saveInterests")).toBeDisabled();
@@ -205,6 +203,8 @@ test("search, event details, saving and unsaving, filters, and month navigation"
   await expect(page.locator("#calendarGrid")).toContainText(
     "Technology meetup",
   );
+  if (await page.locator(".mobile-filters").count())
+    await page.locator(".mobile-filters summary").click();
   await page.locator("#genreFilter").selectOption("Sports");
   await expect(page.locator("#emptyCalendar")).toBeVisible();
   await page.locator("#clearFilters").click();
@@ -239,4 +239,31 @@ test("request access form displays the persisted outcome and email status", asyn
   await expect(page.locator("#formMessage")).toContainText(
     "notification email was sent",
   );
+});
+
+test("mobile agenda opens details and saves an event with touch controls", async ({
+  page,
+}) => {
+  const { account } = await fixture(page);
+  await page.goto("/views/mobile/calendar.html");
+  await expect(page.locator(".agenda-event")).toContainText(
+    "Technology meetup",
+  );
+  await page.locator("#agendaDate").fill(account.events[0].date);
+  await page.locator(".agenda-event").click();
+  await expect(page.locator("#detail")).toBeVisible();
+  await page.locator("#saveEvent").click();
+  await expect(page.locator("#detail")).not.toBeVisible();
+  await page.locator(".agenda-event").click();
+  await expect(page.locator("#saveEvent")).toContainText("Saved");
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBeTruthy();
+  const nav = await page
+    .locator('nav[aria-label="Main navigation"] a')
+    .first()
+    .boundingBox();
+  expect(nav.height).toBeGreaterThanOrEqual(48);
 });
