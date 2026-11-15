@@ -77,6 +77,19 @@ if (data.session && !recoveryMode) {
 } else {
   revealPage();
 
+  const requestNotice = document.querySelector("#requestAccessNotice");
+  if (
+    !recoveryMode &&
+    params.get("next") === "/request-organization-access" &&
+    requestNotice
+  ) {
+    requestNotice.hidden = false;
+    window.setTimeout(() => {
+      requestNotice.classList.add("is-dismissed");
+      window.setTimeout(() => requestNotice.remove(), 220);
+    }, 5000);
+  }
+
   if (hash.has("error") || params.has("error")) {
     showToast("This reset link is invalid or expired. Request a new one.");
   } else if (recoveryMode && !data.session) {

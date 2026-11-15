@@ -1,3 +1,4 @@
+import { applyLogoDestination } from "./logo-destination.js";
 let supabase;
 
 export async function initializeSupabase() {
@@ -29,6 +30,8 @@ export async function apiRequest(path, body, { signal } = {}) {
     throw Object.assign(new Error(result.error || "Request failed"), {
       status: response.status,
     });
+  if (path === "state" || path === "account-summary")
+    applyLogoDestination(result.launch);
   return result;
 }
 

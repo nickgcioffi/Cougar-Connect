@@ -79,6 +79,24 @@ const normalizeEvent = (e) => ({
   endTime: e.endTime,
   desc: e.description || "",
 });
+app.get("/api/account-summary", async (req, res, next) => {
+  try {
+    const profile = check(
+      await req.db
+        .from("User")
+        .select("firstName,launchPreference")
+        .eq("authUserID", req.user.id)
+        .maybeSingle(),
+    );
+    res.set("Cache-Control", "private, no-store");
+    res.json({
+      firstName: profile?.firstName || "",
+      launch: profile?.launchPreference === "/home" ? "/home" : "/",
+    });
+  } catch (error) {
+    next(error);
+  }
+});
 app.get("/api/state", async (req, res, next) => {
   try {
     const db = req.db;
@@ -118,7 +136,7 @@ app.get("/api/state", async (req, res, next) => {
         photo: profile.photoURL,
       },
       role: profile?.role || "user",
-      launch: profile?.launchPreference || "Home",
+      launch: profile?.launchPreference === "/home" ? "/home" : "/",
       interests: chosen.map((x) => x.Interest.name),
       saved: saved.map((x) => x.eventID),
       categories: interests.map((x) => x.name),

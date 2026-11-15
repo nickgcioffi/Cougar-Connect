@@ -17,6 +17,7 @@ async function fixture(page, { profile = true, signedIn = true } = {}) {
     desc: "Meet fellow students",
   };
   const account = {
+    role: "user",
     profile: profile
       ? {
           name: "Test Applicant",
@@ -33,7 +34,7 @@ async function fixture(page, { profile = true, signedIn = true } = {}) {
     events: [event],
     admins: [],
     organizations: [],
-    launch: "Home",
+    launch: "/",
   };
   const uploads = [];
   await page.addInitScript(
@@ -75,6 +76,10 @@ async function fixture(page, { profile = true, signedIn = true } = {}) {
         json: { url: "https://example.invalid", key: "test" },
       });
     if (url.pathname === "/api/state") return route.fulfill({ json: account });
+    if (url.pathname === "/api/account-summary")
+      return route.fulfill({
+        json: { firstName: account.profile?.name.split(" ")[0] || "", launch: account.launch },
+      });
     if (url.pathname === "/api/events/search")
       return route.fulfill({
         json: url.searchParams.get("q").includes("technology") ? [event] : [],
@@ -83,6 +88,7 @@ async function fixture(page, { profile = true, signedIn = true } = {}) {
       const { action, payload } = route.request().postDataJSON();
       if (action === "profile") account.profile = payload;
       if (action === "interests") account.interests = payload;
+      if (action === "launch") account.launch = payload.launch;
       if (action === "save") account.saved = payload.saved ? [payload.id] : [];
       return route.fulfill({ json: { ok: true } });
     }
@@ -346,8 +352,26 @@ test("access request returns through login and uses the account identity", async
   page,
 }) => {
   await fixture(page, { signedIn: false });
-  await page.goto("/request-organization-access");
+  await page.goto("/");
+  await page
+    .locator('.landing-header a[href="/request-organization-access"]')
+    .click();
   await expect(page).toHaveURL(/\/login\?next=/);
+  await expect(page.locator("#requestAccessNotice")).toBeVisible();
+  await expect(page.locator("#requestAccessNotice")).toHaveText(
+    /please log in first to access the form/i,
+  );
+  expect(
+    await page.locator("#requestAccessNotice").evaluate((notice) => {
+      const rect = notice.getBoundingClientRect();
+      return notice.contains(
+        document.elementFromPoint(
+          rect.x + rect.width / 2,
+          rect.y + rect.height / 2,
+        ),
+      );
+    }),
+  ).toBe(true);
   await page.locator('[name="email"]').fill("test@example.invalid");
   await page.locator('[name="password"]').fill("test-password");
   await page.locator('button[name="action"]').click();
@@ -366,6 +390,18 @@ test("access request returns through login and uses the account identity", async
   await expect(page.locator("#formMessage")).toContainText(
     "pending human review",
   );
+});
+
+test("access login notice works without a home referrer and dismisses itself", async ({
+  page,
+}) => {
+  await fixture(page, { signedIn: false });
+  await page.goto("/request-organization-access");
+  await expect(page).toHaveURL(/\/login\?next=/);
+  await expect(page.locator("#requestAccessNotice")).toBeVisible();
+  await expect(page.locator("#requestAccessNotice")).toBeHidden({ timeout: 7000 });
+  await page.goto("/login");
+  await expect(page.locator("#requestAccessNotice")).toBeHidden();
 });
 
 test("operator can choose an organization, approve and revoke an assignment", async ({
@@ -467,11 +503,101 @@ for (const role of ["user", "organization_admin", "operator"]) {
       await expect(page.locator("#operatorSettings")).toBeHidden();
       await expect(page.locator("#openAccessReview")).toBeHidden();
     }
-    await expect(
-      page.locator('main a[href="/request-organization-access"]'),
-    ).toHaveCount(0);
+    if (role === "operator") {
+      await expect(page.locator("#organizationAccessSettings")).toBeHidden();
+    } else {
+      await expect(page.locator("#organizationAccessSettings")).toBeVisible();
+      await expect(page.locator("#requestOrganizationAccess")).toHaveText(
+        role === "organization_admin"
+          ? "Request access to another organization →"
+          : "Request admin access →",
+      );
+      await expect(page.locator("#organizationAccessStatus")).toContainText(
+        "haven’t submitted",
+      );
+      await page.locator("#requestOrganizationAccess").click();
+      await expect(page).toHaveURL(/\/request-organization-access$/);
+      await expect(page.locator('[name="email"]')).toHaveValue("test@example.invalid");
+    }
   });
 }
+
+for (const status of ["Pending", "Needs Review", "Rejected", "Approved"]) {
+  test(`settings displays ${status} organization requests`, async ({ page }) => {
+    await fixture(page);
+    await page.route("**/api/organization-access-requests", (route) =>
+      route.fulfill({ json: {
+        requests: [{ organization: "Outdoor Club", status }],
+        remaining: 2,
+        limit: 3,
+      } }),
+    );
+    await page.goto("/settings");
+    const summary = page.locator("#organizationAccessStatus");
+    await expect(summary).toContainText("Outdoor Club");
+    if (["Pending", "Needs Review"].includes(status)) {
+      await expect(summary).toContainText("awaiting review");
+      await expect(page.locator("#requestOrganizationAccess")).toHaveText("View request →");
+      await expect(page.locator("#requestOrganizationAccess")).toHaveAttribute(
+        "href", "/request-organization-access#requestHistory",
+      );
+    } else {
+      await expect(summary).toContainText(status.toLowerCase());
+      await expect(page.locator("#viewOrganizationRequests")).toBeVisible();
+    }
+    // Request history alone never enables management tools.
+    await expect(page.locator("#clubSettings")).toBeHidden();
+    await expect(page.locator("#operatorSettings")).toBeHidden();
+  });
+}
+
+test("logo destination defaults to public home and saves across pages", async ({ page }) => {
+  await fixture(page);
+  await page.goto("/settings");
+  const publicHome = page.locator('input[name="logoDestination"][value="/"]');
+  const myHome = page.locator('input[name="logoDestination"][value="/home"]');
+  await expect(publicHome).toBeChecked();
+  await expect(page.locator("a.brand")).toHaveAttribute("href", "/");
+  await myHome.check();
+  await expect(page.locator("#logoPreferenceStatus")).toHaveText("Logo destination saved.");
+  await expect(page.locator("a.brand")).toHaveAttribute("href", "/home");
+  await page.reload();
+  await expect(myHome).toBeChecked();
+  await page.locator("a.brand").click();
+  await expect(page).toHaveURL(/\/home$/);
+  await page.goto("/");
+  await expect(page.locator("header a.brand")).toHaveAttribute("href", "/home");
+  await expect(page.locator("footer a.brand")).toHaveAttribute("href", "/home");
+  await page.goto("/about");
+  await page.locator("a.brand").click();
+  await expect(page).toHaveURL(/\/home$/);
+  await page.goto("/settings");
+  await publicHome.check();
+  await expect(page.locator("#logoPreferenceStatus")).toHaveText("Logo destination saved.");
+  await page.locator("a.brand").click();
+  await expect(page).toHaveURL("http://127.0.0.1:3199/");
+});
+
+test("logo preference reverts the selection when saving fails", async ({ page }) => {
+  await fixture(page);
+  await page.route("**/api/action", route => route.fulfill({ status: 503, json: { error: "Unavailable" } }));
+  await page.goto("/settings");
+  await page.locator('input[name="logoDestination"][value="/home"]').check();
+  await expect(page.locator("#logoPreferenceStatus")).toContainText("Couldn’t save");
+  await expect(page.locator('input[name="logoDestination"][value="/"]')).toBeChecked();
+  await expect(page.locator("a.brand")).toHaveAttribute("href", "/");
+});
+
+test("settings keeps access links usable when request history fails", async ({ page }) => {
+  await fixture(page);
+  await page.route("**/api/organization-access-requests", (route) =>
+    route.fulfill({ status: 503, json: { error: "Unavailable" } }),
+  );
+  await page.goto("/settings");
+  await expect(page.locator("#organizationAccessStatus")).toContainText("couldn’t be loaded");
+  await expect(page.locator("#requestOrganizationAccess")).toBeVisible();
+  await expect(page.locator("#signOut")).toBeVisible();
+});
 
 test("operator can add an organization and select it without losing a review choice", async ({
   page,
@@ -574,23 +700,47 @@ test("access requests show quota and prevent a fourth submission", async ({
 test("landing waits for session validation before showing account links", async ({
   page,
 }) => {
-  const { account } = await fixture(page);
+  await fixture(page);
   let release;
+  let lookups = 0;
+  let fullStateLoads = 0;
+  page.on("request", (request) => {
+    if (new URL(request.url()).pathname === "/api/state") fullStateLoads++;
+  });
   const wait = new Promise((resolve) => {
     release = resolve;
   });
-  await page.route("**/api/state", async (route) => {
+  await page.route("**/api/account-summary", async (route) => {
+    lookups++;
     await wait;
-    await route.fulfill({ json: account });
+    await route.fulfill({ json: { firstName: "Test" } });
   });
   await page.goto("/", { waitUntil: "domcontentloaded" });
   await expect(
     page.getByRole("heading", { name: "Find your people. Make your plans." }),
-  ).toBeVisible();
+  ).toBeHidden();
+  await expect(page.locator(".landing-loading")).toBeVisible();
   const controls = page.locator(".cc-actions [data-landing-auth]");
   await expect(controls.first()).toBeHidden();
   release();
   await expect(controls.first()).toHaveText("Open Cougar Connect");
   await expect(controls.first()).toBeVisible();
   await expect(controls.last()).toHaveText("Your account");
+  await expect(page.locator("#landingSession")).toContainText("Signed in as Test");
+  await expect(page.locator(".landing-loading")).toBeHidden();
+  await expect(page.locator("#hero-title")).toBeVisible();
+  expect(lookups).toBe(1);
+  expect(fullStateLoads).toBe(0);
+});
+
+test("landing remains usable when the account lookup fails", async ({ page }) => {
+  await fixture(page);
+  await page.route("**/api/account-summary", (route) =>
+    route.fulfill({ status: 503, json: { error: "Unavailable" } }),
+  );
+  await page.goto("/");
+  await expect(page.locator("#hero-title")).toBeVisible();
+  await expect(page.locator(".landing-loading")).toBeHidden();
+  await expect(page.locator('.cc-actions a[href="/login"]')).toBeVisible();
+  await expect(page.locator("#landingSession")).toBeHidden();
 });
