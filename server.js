@@ -309,6 +309,55 @@ app.get("/api/admin/reviews", async (req, res, next) => {
     next(error);
   }
 });
+
+
+app.get("/api/admin/event-saves", async (req, res, next) => {
+  try {
+    const { data: admins, error: adminError } = await req.db
+      .from("Organization Admins")
+      .select("orgID")
+      .eq("authUserID", req.user.id);
+
+    if (adminError) throw adminError;
+
+    const orgIDs = admins.map((admin) => admin.orgID);
+
+    if (!orgIDs.length) {
+      return res.json({ saves: [] });
+    }
+
+    const { data: events, error: eventsError } = await req.db
+      .from("Events")
+      .select("eventID, orgID")
+      .in("orgID", orgIDs);
+
+    if (eventsError) throw eventsError;
+
+    if (!events.length) {
+      return res.json({ saves: [] });
+    }
+
+    const { data: savedEvents, error: savesError } = await req.db
+      .from("UserEvents")
+      .select("eventID")
+      .in("eventID", events.map((event) => event.eventID))
+      .eq("isSaved", true);
+
+    if (savesError) throw savesError;
+
+    const saves = events.map((event) => ({
+      eventID: event.eventID,
+      totalSaves: savedEvents.filter(
+        (saved) => saved.eventID === event.eventID
+      ).length,
+    }));
+
+    res.json({ saves });
+  } catch (error) {
+    next(error);
+  }
+});
+
 app.get("/api/my-reviews", async (req, res, next) => {
   try {
     const { data, error } = await req.db

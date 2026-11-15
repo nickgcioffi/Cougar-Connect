@@ -13,6 +13,7 @@ if (!context) throw new Error("Authentication required");
 let account = context.account;
 setAccountBadge(account);
 let editingEventId = null;
+let eventSaveCounts = {};
 
 function resetEventForm() {
   const form = document.querySelector("#eventForm");
@@ -48,8 +49,9 @@ function renderAdmin() {
           (event) => `
     <div class="panel topline">
       <div>
-        <h3>${escapeHtml(event.name)}</h3>
-        <p>${escapeHtml(event.org)} · ${eventDate(event)}</p>
+      <h3>${escapeHtml(event.name)}</h3>
+      <p>${escapeHtml(event.org)} · ${eventDate(event)}</p>
+      <p>♥ ${eventSaveCounts[event.id] ?? 0} students saved this event</p>
       </div>
       <div class="row">
         <button type="button" data-edit-event="${event.id}">
@@ -180,3 +182,19 @@ async function loadAdminReviews() {
 }
 
 loadAdminReviews();
+
+async function loadEventSaveCounts() {
+  try {
+    const { saves } = await apiRequest("admin/event-saves");
+
+    eventSaveCounts = Object.fromEntries(
+      saves.map((item) => [item.eventID, item.totalSaves])
+    );
+
+    renderAdmin();
+  } catch (error) {
+    showToast(error.message);
+  }
+}
+
+loadEventSaveCounts();
