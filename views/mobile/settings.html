@@ -11,7 +11,7 @@
   </head>
   <body data-mobile="true" class="page-loading">
     <header>
-      <a class="brand" href="/home"
+      <a class="brand" href="/"
         ><img
           class="mark"
           src="/assets/byu-logo.png"
@@ -51,15 +51,20 @@
         </div>
         <div class="panel">
           <h2>App preferences</h2>
-          <label class="setting"
-            >Open at launch<select id="launchPreference">
-              <option>Home</option>
-              <option>Calendar</option>
-              <option>Feed</option>
-              <option>Settings</option>
-            </select></label
-          >
+          <fieldset id="logoDestination" class="logo-destination">
+            <legend>When I click the Cougar Connect logo, go to:</legend>
+            <label><input type="radio" name="logoDestination" value="/" checked /> Public homepage</label>
+            <label><input type="radio" name="logoDestination" value="/home" /> My home</label>
+          </fieldset>
+          <p id="logoPreferenceStatus" role="status"></p>
         </div>
+        <section class="panel" id="organizationAccessSettings" aria-labelledby="organizationAccessTitle" hidden>
+          <h2 id="organizationAccessTitle">Organization access</h2>
+          <p id="organizationAccessDescription"></p>
+          <p id="organizationAccessStatus" role="status">Checking your requests…</p>
+          <a id="requestOrganizationAccess" href="/request-organization-access">Request admin access →</a>
+          <a id="viewOrganizationRequests" href="/request-organization-access#requestHistory" hidden>View requests →</a>
+        </section>
         <section class="panel" id="clubSettings" aria-labelledby="clubSettingsTitle" hidden>
           <h2 id="clubSettingsTitle">Your clubs</h2>
           <p>Manage events for your assigned clubs and organizations.</p>

@@ -200,7 +200,7 @@ test("authenticated application workflows", async (t) => {
         },
       ],
       interests: ["save_interests", ["Technology", "Sports", "Music"]],
-      launch: ["save_launch", "Calendar"],
+      launch: ["save_launch", { launch: "/home" }],
       save: ["save_event", { id: 12, saved: true }],
       event: ["create_event", { name: "Meeting", orgID: 7 }],
       delete: ["cancel_event", { id: 12 }],
@@ -246,7 +246,7 @@ test("authenticated application workflows", async (t) => {
         profile = null;
         const state = await (await request("/api/state")).json();
         assert.equal(state.profile, null);
-        assert.equal(state.launch, "Home");
+        assert.equal(state.launch, "/");
         profile = previous;
       },
     );

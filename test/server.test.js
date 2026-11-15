@@ -222,6 +222,7 @@ test("Express serves the app and rejects unauthenticated database requests", asy
     assert.equal(config.serviceRoleKey, undefined);
     for (const [path, method] of [
       ["state", "GET"],
+      ["account-summary", "GET"],
       ["action", "POST"],
       ["account/delete", "POST"],
     ]) {

@@ -166,6 +166,19 @@ test("database migrations, RPC validation, persistence and RLS", async (t) => {
         );
       },
     );
+    await t.test("logo destination defaults to public home and persists per account", async () => {
+      const preference = async (id) =>
+        (await asUser(id, 'select "launchPreference" from public."User"')).rows[0].launchPreference;
+      assert.equal(await preference(alice), "/");
+      await rpc(alice, "save_launch", { launch: "/home" });
+      assert.equal(await preference(alice), "/home");
+      assert.equal(await preference(bob), "/");
+      for (const payload of [{}, { launch: null }, { launch: "Calendar" }, { launch: "https://example.com" }])
+        await assert.rejects(rpc(alice, "save_launch", payload));
+      assert.equal(await preference(alice), "/home");
+      await rpc(alice, "save_launch", { launch: "/" });
+      assert.equal(await preference(alice), "/");
+    });
     await t.test("photo policies isolate user upload paths", async () => {
       await asUser(
         alice,

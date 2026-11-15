@@ -1,4 +1,4 @@
-import { initializeSupabase, loadAccount } from "../shared/api.js";
+import { initializeSupabase, apiRequest } from "../shared/api.js";
 const original = new Map(
   [...document.querySelectorAll('a[href="/login"],a[href="/signup"]')].map(
     (a) => [a, { html: a.innerHTML, href: a.getAttribute("href") }],
@@ -16,7 +16,7 @@ async function update() {
     const supabase = await initializeSupabase();
     const { data, error } = await supabase.auth.getSession();
     if (error) throw error;
-    const account = data.session ? await loadAccount() : null;
+    const account = data.session ? await apiRequest("account-summary") : null;
     if (current !== version) return;
     // A UI hint only. Authentication always uses the validated Supabase session.
     document.cookie = `cc_signed_in=${account ? "1" : ""}; Path=/; SameSite=Lax; Max-Age=${account ? 2592000 : 0}${location.protocol === "https:" ? "; Secure" : ""}`;
@@ -41,7 +41,7 @@ async function update() {
     }
     state.hidden = !account;
     if (account)
-      state.textContent = `Signed in${account.profile?.name ? ` as ${account.profile.name.split(" ")[0]}` : ""}${mobile ? " · Open app →" : ""}`;
+      state.textContent = `Signed in${account.firstName ? ` as ${account.firstName}` : ""}${mobile ? " · Open app →" : ""}`;
   } catch {
     if (current !== version) return;
     for (const [a, old] of original) {
@@ -57,11 +57,15 @@ async function update() {
 }
 try {
   const supabase = await initializeSupabase();
-  supabase.auth.onAuthStateChange(() => {
+  supabase.auth.onAuthStateChange((event) => {
+    // The explicit initial update already reads the current session.
+    if (event === "INITIAL_SESSION" || event === "TOKEN_REFRESHED") return;
     setTimeout(update, 0);
   });
   await update();
-  window.addEventListener("pageshow", update);
+  window.addEventListener("pageshow", (event) => {
+    if (event.persisted) update();
+  });
 } catch {
   revealAuthLinks();
 }
