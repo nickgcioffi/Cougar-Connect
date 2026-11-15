@@ -6,7 +6,14 @@ import { eventCard, eventCards } from "../js/shared/events.js";
 
 // Small browser fixtures follow the existing viewport tests' simulated-window convention.
 test("client authentication, onboarding, and event presentation", async (t) => {
-  const originals = { fetch: globalThis.fetch, window: globalThis.window };
+  const originals = { fetch: globalThis.fetch, window: globalThis.window, document: globalThis.document };
+  const logos = [{ href: "/", dataset: {} }, { href: "/", dataset: {} }];
+  globalThis.document = {
+    querySelectorAll(selector) {
+      assert.equal(selector, "a.brand");
+      return logos;
+    },
+  };
   let session = { access_token: "test-token" },
     sessionError = null,
     response = { profile: {}, interests: [] },
@@ -47,6 +54,18 @@ test("client authentication, onboarding, and event presentation", async (t) => {
         );
       },
     );
+    await t.test("account responses apply the logo preference to every brand link", async () => {
+      for (const path of ["state", "account-summary"]) {
+        for (const launch of ["/home", "/", undefined, "https://example.invalid"]) {
+          response = { profile: {}, interests: [], launch };
+          await apiRequest(path);
+          for (const logo of logos) {
+            assert.equal(logo.href, launch === "/home" ? "/home" : "/");
+            assert.equal(logo.dataset.destinationReady, "true");
+          }
+        }
+      }
+    });
     await t.test(
       "save and unsave actions send the intended event state",
       async () => {
@@ -140,6 +159,8 @@ test("client authentication, onboarding, and event presentation", async (t) => {
     );
   } finally {
     globalThis.fetch = originals.fetch;
+    if (originals.document === undefined) delete globalThis.document;
+    else globalThis.document = originals.document;
     if (originals.window === undefined) delete globalThis.window;
     else globalThis.window = originals.window;
   }

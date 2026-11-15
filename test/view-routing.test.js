@@ -19,6 +19,7 @@ function preview({
   let reloads = 0;
   let cookie = "";
   let resize;
+  const listeners = new Map();
   location.replace = (target) => redirects.push(target);
   location.reload = () => reloads++;
   const viewport = {
@@ -28,6 +29,7 @@ function preview({
     },
   };
   const document = {
+    addEventListener: (event, callback) => listeners.set(event, callback),
     querySelector: () => ({ content: currentView }),
     get cookie() {
       return cookie;
@@ -43,6 +45,7 @@ function preview({
   });
   return {
     redirects,
+    click: (event) => listeners.get("click")(event),
     get reloads() {
       return reloads;
     },
@@ -95,4 +98,18 @@ test("local viewport selection reloads only when needed and cookies are availabl
     preview({ ...local, currentView: "mobile", narrow: false }).reloads,
     1,
   );
+});
+
+
+test("logo click handler preserves normal navigation for unrelated and resolved links", async () => {
+  const result = preview();
+  for (const logo of [null, { dataset: { destinationReady: "true" } }]) {
+    let prevented = false;
+    await result.click({
+      target: { closest: () => logo },
+      button: 0,
+      preventDefault: () => { prevented = true; },
+    });
+    assert.equal(prevented, false);
+  }
 });
