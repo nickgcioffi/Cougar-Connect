@@ -309,6 +309,20 @@ app.get("/api/admin/reviews", async (req, res, next) => {
     next(error);
   }
 });
+app.get("/api/my-reviews", async (req, res, next) => {
+  try {
+    const { data, error } = await req.db
+      .from("Event Reviews")
+      .select("eventID, rating, comment, created_at")
+      .eq("authUserID", req.user.id);
+
+    if (error) throw error;
+
+    res.json({ reviews: data ?? [] });
+  } catch (error) {
+    next(error);
+  }
+});
 
 app.post("/api/reviews", async (req, res, next) => {
   try {
