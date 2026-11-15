@@ -14,7 +14,17 @@ BYU events are scattered across campus organizations, locations, and communicati
 
 ![Cougar Connect entity relationship diagram](docs/cougar-connect-erd.png)
 
-The Step 1 ERD models User, Interest, Events, and Organization, with join tables for user interests, event interests, saved user events, and event co-hosts.
+The ERD shows the current Supabase schema, including profiles, interests, events, organizations, reviews, and organization access requests.
+
+## Data Flow Diagrams
+
+### Level 0
+
+![Level 0 data flow diagram](docs/cougar-connect_lv0_dfd.png)
+
+### Level 1
+
+![Level 1 data flow diagram](docs/cougar-connect_lv1_dfd.png)
 
 The Supabase backend persists all information entered on the Create Profile page: full name, university, study level, graduation month, bio, and optional profile photo. Full name corresponds to FirstName and LastName; university, graduation month, bio, and photo correspond to UniName, GradDate, Biography, and PhotoURL. Study level corresponds to StudyLevel in the ERD User table.
 
