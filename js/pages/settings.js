@@ -141,4 +141,80 @@ deleteAccountForm.onsubmit = async (event) => {
     deleteAccountPassword.focus();
   }
 };
+
+
+
+const appFeedbackForm = document.querySelector("#appFeedbackForm");
+const appFeedbackStatus = document.querySelector("#appFeedbackStatus");
+const submitAppFeedback = document.querySelector("#submitAppFeedback");
+
+function showAppFeedbackConfirmation(rating) {
+  appFeedbackForm.hidden = true;
+
+  const confirmation = document.createElement("div");
+  confirmation.className = "app-feedback-confirmation";
+
+  const heading = document.createElement("h3");
+  heading.textContent = "✓ Thank you for your feedback!";
+
+  const ratingText = document.createElement("p");
+  ratingText.textContent = `You rated Cougar Connect ${rating} out of 5 stars.`;
+
+  const message = document.createElement("p");
+  message.textContent = "Your feedback has been submitted successfully.";
+
+  confirmation.append(heading, ratingText, message);
+  appFeedbackForm.after(confirmation);
+}
+
+async function loadAppFeedback() {
+  const { data, error } = await supabase
+    .from("App Reviews")
+    .select("rating, comment")
+    .eq("authUserID", session.user.id)
+    .maybeSingle();
+
+  if (error) {
+    appFeedbackStatus.textContent = "Unable to load your feedback.";
+    return;
+  }
+
+  if (data) {
+    showAppFeedbackConfirmation(data.rating);
+  }
+}
+
+appFeedbackForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+
+  const rating = Number(
+    appFeedbackForm.querySelector('input[name="appRating"]:checked')?.value
+  );
+  const comment = document.querySelector("#appFeedbackComment").value.trim();
+
+  if (!Number.isInteger(rating) || rating < 1 || rating > 5) return;
+
+  submitAppFeedback.disabled = true;
+  appFeedbackStatus.textContent = "Submitting feedback...";
+
+  const { error } = await supabase.from("App Reviews").insert({
+    authUserID: session.user.id,
+    rating,
+    comment: comment || null,
+  });
+
+  if (error) {
+    submitAppFeedback.disabled = false;
+    appFeedbackStatus.textContent = error.code === "23505"
+      ? "You have already submitted feedback."
+      : `Unable to submit feedback: ${error.message}`;
+    return;
+  }
+
+  showAppFeedbackConfirmation(rating);
+});
+
+loadAppFeedback();
+
+
 revealPage();

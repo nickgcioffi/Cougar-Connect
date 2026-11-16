@@ -1489,3 +1489,68 @@ select {
   font-weight: 400;
 }
 
+
+
+
+/* App experience feedback */
+.app-rating-fieldset {
+  border: none;
+  padding: 0;
+  margin: 20px 0;
+  min-width: 0;
+}
+
+.app-rating-fieldset legend {
+  font-weight: 600;
+  margin-bottom: 14px;
+}
+
+.app-rating-stars {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.app-rating-stars label {
+  position: relative;
+  cursor: pointer;
+}
+
+.app-rating-stars input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+}
+
+.app-rating-stars span {
+  display: inline-block;
+  font-size: 38px;
+  color: #cbd5e1;
+  transition: color 0.15s ease;
+}
+
+.app-rating-stars label:has(input:checked) span,
+.app-rating-stars label:has(input:checked) ~ label span {
+  color: #cbd5e1;
+}
+
+.app-rating-stars:has(input[value="1"]:checked) label:nth-child(-n+1) span,
+.app-rating-stars:has(input[value="2"]:checked) label:nth-child(-n+2) span,
+.app-rating-stars:has(input[value="3"]:checked) label:nth-child(-n+3) span,
+.app-rating-stars:has(input[value="4"]:checked) label:nth-child(-n+4) span,
+.app-rating-stars:has(input[value="5"]:checked) label:nth-child(-n+5) span {
+  color: #f5b301;
+}
+
+.app-rating-stars input:focus-visible + span {
+  outline: 2px solid #2563eb;
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+.app-rating-description {
+  margin-top: 6px;
+  color: #64748b;
+  font-size: 14px;
+}
