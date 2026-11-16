@@ -54,11 +54,34 @@ export function openEvent(account, id, onChange) {
   const endTime = event.endTime
     ? eventTime({ date: event.date, time: event.endTime })
     : "";
-  dialog.innerHTML = `<button class="close" id="closeDetail" aria-label="Close event details">✕</button><span class="tag">${escapeHtml(event.external ? "External · BYU Clubs" : event.genre)}</span>${ended ? '<p class="ended-label">Past event</p>' : ""}<h1 style="font-size:30px;margin-top:22px">${escapeHtml(event.name)}</h1><p>${eventDate(event)}, ${eventTime(event)}${endTime ? `–${endTime}` : ""}<br>${escapeHtml(event.location)}<br>Hosted by ${escapeHtml(event.org)}</p><p>${escapeHtml(event.desc)}</p>${event.external ? `<p><a href="${escapeHtml(event.sourceUrl)}" target="_blank" rel="noopener noreferrer">View on BYU Clubs ↗</a></p>` : ""}<div class="actions">${event.external ? "" : `<button class="primary" id="saveEvent">${saved ? "♥ Saved · remove from upcoming" : "♡ Like & add to upcoming"}</button>`}<button id="googleCalendar">Add to Google Calendar ↗</button><button id="shareEvent">Share event</button></div>`;
+  dialog.innerHTML = `<button class="close" id="closeDetail" aria-label="Close event details">✕</button><span class="tag">${escapeHtml(event.external ? "External · BYU Clubs" : event.genre)}
+  </span>${ended ? '<p class="ended-label">Past event</p>' : ""}<h1 style="font-size:30px;margin-top:22px">${escapeHtml(event.name)}</h1><p>${eventDate(event)}, ${eventTime(event)}${endTime ? `–${endTime}` : ""}<br>${escapeHtml(event.location)}<br>Hosted by ${escapeHtml(event.org)}</p><p>${escapeHtml(event.desc)}
+  </p>${event.external ? `<p><a href="${escapeHtml(event.sourceUrl)}" target="_blank" rel="noopener noreferrer">View on BYU Clubs ↗</a></p>` : ""}<div class="actions">${event.external || ended ? "" : `<button class="primary" id="saveEvent">${saved ? "♥ Saved · remove from upcoming" : "♡ Like & add to upcoming"}
+  </button>`}${ended ? "" : '<button id="googleCalendar">Add to Google Calendar ↗</button>'}${ended ? "" : '<button id="shareEvent">Share event</button>'}</div>`;
   // Show feedback form for past, non-external events.
-  const canReview =
-    !event.external && Boolean(event.endTime) && ended;
-  if (canReview) {
+const canReview =
+  !event.external && Boolean(event.endTime) && ended;
+
+if (canReview) {
+  // Check whether this student has already reviewed the event.
+  apiRequest("my-reviews")
+    .then(({ reviews }) => {
+      const existingReview = reviews.find(
+        (review) => Number(review.eventID) === Number(event.id)
+      );
+
+      if (!existingReview) return;
+
+      const reviewSection = dialog.querySelector("#eventReviewForm");
+      if (!reviewSection) return;
+
+      reviewSection.innerHTML = `
+        <h3>You've already reviewed this event</h3>
+        <p>Your rating: ${"★".repeat(existingReview.rating)} (${existingReview.rating}/5)</p>
+        <p>${escapeHtml(existingReview.comment || "No written feedback.")}</p>
+      `;
+    })
+    .catch((error) => showToast(error.message));
     dialog.insertAdjacentHTML(
       "beforeend",
       `
@@ -122,7 +145,7 @@ export function openEvent(account, id, onChange) {
 
   dialog.showModal();
   $("#closeDetail").onclick = () => dialog.close();
-  if (!event.external)
+  if (!event.external && !ended)
     $("#saveEvent").onclick = async () => {
       try {
         await runAction("save", { id, saved: !saved });
@@ -132,7 +155,7 @@ export function openEvent(account, id, onChange) {
         showToast(error.message);
       }
     };
-  $("#googleCalendar").onclick = () => {
+  if (!ended) $("#googleCalendar").onclick = () => {
     const start = eventTimestamp(event.date, event.time);
     const end = event.endTime
       ? eventEndTimestamp(event)
@@ -155,7 +178,7 @@ export function openEvent(account, id, onChange) {
       "noopener,noreferrer",
     );
   };
-  $("#shareEvent").onclick = async () => {
+  if (!ended) $("#shareEvent").onclick = async () => {
     const text = `${event.name} — ${eventDate(event)} at ${eventTime(event)}, ${event.location}.`;
     try {
       if (navigator.share) await navigator.share({ title: event.name, text });

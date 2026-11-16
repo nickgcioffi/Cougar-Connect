@@ -13,6 +13,7 @@ if (!context) throw new Error("Authentication required");
 let account = context.account;
 setAccountBadge(account);
 let editingEventId = null;
+let eventSaveCounts = {};
 
 function resetEventForm() {
   const form = document.querySelector("#eventForm");
@@ -48,8 +49,9 @@ function renderAdmin() {
           (event) => `
     <div class="panel topline">
       <div>
-        <h3>${escapeHtml(event.name)}</h3>
-        <p>${escapeHtml(event.org)} · ${eventDate(event)}</p>
+      <h3>${escapeHtml(event.name)}</h3>
+      <p>${escapeHtml(event.org)} · ${eventDate(event)}</p>
+      <p>♥ ${eventSaveCounts[event.id] ?? 0} students saved this event</p>
       </div>
       <div class="row">
         <button type="button" data-edit-event="${event.id}">
@@ -155,28 +157,111 @@ revealPage();
 
 document.querySelector("#cancelEditing").onclick = resetEventForm;
 
+
 async function loadAdminReviews() {
   const container = document.querySelector("#adminReviews");
 
   try {
     const { reviews } = await apiRequest("admin/reviews");
 
-    container.innerHTML = reviews.length
-      ? reviews
-          .map(
-            (review) => `
-              <div style="padding: 16px 0; border-bottom: 1px solid #ddd;">
-                <strong>${escapeHtml(review.eventName || "Event")}</strong>
-                <p>⭐ ${review.rating}/5</p>
-                <p>${escapeHtml(review.comment || "No written feedback.")}</p>
+    if (!reviews.length) {
+      container.innerHTML = "<p>No student feedback yet.</p>";
+      return;
+    }
+
+    // Group reviews by event.
+    const grouped = new Map();
+
+    for (const review of reviews) {
+      if (!grouped.has(review.eventID)) {
+        grouped.set(review.eventID, {
+          name: review.eventName || "Event",
+          reviews: [],
+        });
+      }
+      grouped.get(review.eventID).reviews.push(review);
+    }
+
+    container.innerHTML = [...grouped.values()]
+      .map(({ name, reviews: eventReviews }) => {
+        const average =
+          eventReviews.reduce((sum, review) => sum + review.rating, 0) /
+          eventReviews.length;
+
+        const sorted = [...eventReviews].sort(
+          (a, b) => new Date(b.created_at) - new Date(a.created_at)
+        );
+
+        return `
+          <div class="panel" style="margin: 16px 0;">
+            <h3>${escapeHtml(name)}</h3>
+            <p>⭐ ${average.toFixed(1)}/5 · ${eventReviews.length} reviews</p>
+
+            <details>
+              <summary>View student feedback</summary>
+              <div class="review-list">
+                ${sorted
+                  .map(
+                    (review, index) => `
+                      <div
+                        class="review-item"
+                        ${index >= 3 ? "hidden" : ""}
+                        style="padding: 12px 0; border-bottom: 1px solid #ddd;"
+                      >
+                        <strong>⭐ ${review.rating}/5</strong>
+                        <small>${new Date(review.created_at).toLocaleDateString()}</small>
+                        <p>${escapeHtml(review.comment || "No written feedback.")}</p>
+                      </div>
+                    `
+                  )
+                  .join("")}
               </div>
-            `,
-          )
-          .join("")
-      : "<p>No student feedback yet.</p>";
+
+              ${
+                sorted.length > 3
+                  ? '<button type="button" class="show-more-reviews">Show more reviews</button>'
+                  : ""
+              }
+            </details>
+          </div>
+        `;
+      })
+      .join("");
+
+    container.querySelectorAll(".show-more-reviews").forEach((button) => {
+      button.onclick = () => {
+        const list = button.closest("details").querySelector(".review-list");
+        const hiddenReviews = [...list.querySelectorAll(".review-item[hidden]")];
+
+        hiddenReviews.slice(0, 5).forEach((review) => {
+          review.hidden = false;
+        });
+
+        if (!list.querySelector(".review-item[hidden]")) {
+          button.remove();
+        }
+      };
+    });
   } catch (error) {
     container.textContent = error.message;
   }
 }
 
+async function loadEventSaveCounts() {
+  try {
+    const { saves } = await apiRequest("admin/event-saves");
+
+    eventSaveCounts = Object.fromEntries(
+      saves.map((item) => [item.eventID, item.totalSaves])
+    );
+
+    renderAdmin();
+  } catch (error) {
+    showToast(error.message);
+  }
+}
+
 loadAdminReviews();
+
+
+loadEventSaveCounts();
