@@ -337,11 +337,17 @@ app.get("/api/admin/event-saves", async (req, res, next) => {
       return res.json({ saves: [] });
     }
 
-    const { data: savedEvents, error: savesError } = await req.db
-      .from("UserEvents")
-      .select("eventID")
-      .in("eventID", events.map((event) => event.eventID))
-      .eq("isSaved", true);
+if (!adminDb) {
+  return res.status(503).json({
+    error: "Admin database connection is unavailable",
+  });
+}
+
+const { data: savedEvents, error: savesError } = await adminDb
+    .from("UserEvents")
+    .select("eventID")
+    .in("eventID", events.map((event) => event.eventID))
+    .eq("isSaved", true);
 
     if (savesError) throw savesError;
 

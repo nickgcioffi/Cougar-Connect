@@ -247,7 +247,19 @@ async function loadAdminReviews() {
   }
 }
 
+async function loadEventSaveCounts() {
+  try {
+    const { saves } = await apiRequest("admin/event-saves");
 
+    eventSaveCounts = Object.fromEntries(
+      saves.map((item) => [item.eventID, item.totalSaves])
+    );
+
+    renderAdmin();
+  } catch (error) {
+    showToast(error.message);
+  }
+}
 
 loadAdminReviews();
 
