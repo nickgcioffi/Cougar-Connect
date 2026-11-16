@@ -43,6 +43,23 @@ function renderAdmin() {
   const managedEvents = account.events.filter(
     (event) => event.orgID != null && adminOrgIDs.has(String(event.orgID)),
   );
+const analytics = document.querySelector("#adminAnalytics");
+
+if (analytics) {
+  analytics.innerHTML = `
+    <div class="panel">
+      <h3>Event Analytics</h3>
+      <p><strong>Total managed events:</strong> ${managedEvents.length}</p>
+      <p><strong>Total event saves:</strong> ${
+        managedEvents.reduce(
+          (total, event) => total + (eventSaveCounts[event.id] ?? 0),
+          0
+        )
+      }</p>
+    </div>
+  `;
+}
+
   document.querySelector("#adminEvents").innerHTML = managedEvents.length
     ? managedEvents
         .map(
@@ -118,6 +135,7 @@ function renderAdmin() {
         await runAction("delete", { id: button.dataset.deleteEvent });
         account = await loadAccount();
         renderAdmin();
+        await loadAdminReviews();
         showToast("Event cancelled");
       } catch (error) {
         showToast(error.message);
@@ -145,6 +163,7 @@ document.querySelector("#eventForm").onsubmit = async (event) => {
 
     account = await loadAccount();
     renderAdmin();
+    await loadAdminReviews();
 
     showToast(isEditing ? "Event updated successfully" : "Event created");
   } catch (error) {
@@ -157,17 +176,48 @@ revealPage();
 
 document.querySelector("#cancelEditing").onclick = resetEventForm;
 
-
 async function loadAdminReviews() {
   const container = document.querySelector("#adminReviews");
 
   try {
     const { reviews } = await apiRequest("admin/reviews");
 
+    const totalReviews = reviews.length;
+
+    const averageRating = totalReviews
+      ? (
+          reviews.reduce((sum, review) => sum + Number(review.rating), 0) /
+          totalReviews
+        ).toFixed(1)
+      : "N/A";
+
+    const analytics = document.querySelector("#adminAnalytics");
+
+    if (analytics) {
+      const panel = analytics.querySelector(".panel");
+
+      if (panel) {
+        panel.querySelector("#reviewAnalytics")?.remove();
+
+        panel.insertAdjacentHTML(
+          "beforeend",
+          `
+            <div id="reviewAnalytics">
+              <p><strong>Total event reviews:</strong> ${totalReviews}</p>
+              <p><strong>Average event rating:</strong> ${
+                totalReviews ? `⭐ ${averageRating}/5` : "N/A"
+              }</p>
+            </div>
+          `
+        );
+      }
+    }
+
     if (!reviews.length) {
       container.innerHTML = "<p>No student feedback yet.</p>";
       return;
     }
+
 
     // Group reviews by event.
     const grouped = new Map();
@@ -256,12 +306,10 @@ async function loadEventSaveCounts() {
     );
 
     renderAdmin();
+    await loadAdminReviews();
   } catch (error) {
     showToast(error.message);
   }
 }
-
-loadAdminReviews();
-
 
 loadEventSaveCounts();

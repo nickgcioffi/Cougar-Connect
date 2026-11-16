@@ -48,7 +48,38 @@ if (context) {
     };
     async function render() {
       const { requests, memberships } = await apiRequest("operator/access");
+      const { totalReviews, averageRating, reviews } =
+        await apiRequest("operator/app-reviews");
       root.innerHTML = `
+      <section class="operator-section" aria-labelledby="appAnalyticsTitle">
+          <h2 id="appAnalyticsTitle">App Analytics</h2>
+
+          <div class="panel">
+            <p><strong>Average app rating:</strong>
+              ${averageRating === null ? "N/A" : `⭐ ${averageRating.toFixed(1)}/5`}
+            </p>
+
+            <p><strong>Total app reviews:</strong> ${totalReviews}</p>
+          </div>
+
+          <h3>Student Feedback</h3>
+
+          ${
+            reviews.length
+              ? reviews
+                  .map(
+                    (review) => `
+                      <div class="panel">
+                        <p><strong>⭐ ${Number(review.rating)}/5</strong></p>
+                        <p>${escapeHtml(review.comment || "No written feedback.")}</p>
+                        <small>${new Date(review.created_at).toLocaleDateString()}</small>
+                      </div>
+                    `
+                  )
+                  .join("")
+              : "<p>No app reviews have been submitted yet.</p>"
+          }
+        </section>
         <section class="operator-section" aria-labelledby="requestsTitle">
           <h2 id="requestsTitle">Access requests</h2>
           ${
