@@ -1,4 +1,5 @@
 import { registerAccessRoutes } from "./server/access-routes.js";
+import { campusDate } from "./js/shared/event-time.js";
 import express from "express";
 import { createClient } from "@supabase/supabase-js";
 import { readFileSync } from "node:fs";
@@ -254,6 +255,20 @@ app.post("/api/action", async (req, res, next) => {
     };
     if (!functions[action])
       return res.status(400).json({ error: "Unknown action." });
+    if (action === "event" || action === "update") {
+      const date = payload?.date;
+      if (
+        typeof date !== "string" ||
+        !/^\d{4}-\d{2}-\d{2}$/.test(date) ||
+        !Number.isFinite(Date.parse(`${date}T00:00:00Z`)) ||
+        new Date(`${date}T00:00:00Z`).toISOString().slice(0, 10) !== date ||
+        date < campusDate()
+      ) {
+        return res.status(400).json({
+          error: "Choose today or a future date (Mountain Time).",
+        });
+      }
+    }
     check(await req.db.rpc(functions[action], { payload }));
     res.json({ ok: true });
   } catch (error) {
