@@ -1,5 +1,6 @@
 import { requireAccount } from "../shared/auth.js";
 import { apiRequest, loadAccount, runAction } from "../shared/api.js";
+import { campusDate } from "../shared/event-time.js";
 import {
   escapeHtml,
   eventDate,
@@ -14,6 +15,14 @@ let account = context.account;
 setAccountBadge(account);
 let editingEventId = null;
 let eventSaveCounts = {};
+
+const eventDateInput = document.querySelector('#eventForm input[name="date"]');
+function refreshDateMinimum() {
+  eventDateInput.min = campusDate();
+}
+refreshDateMinimum();
+eventDateInput.addEventListener("focus", refreshDateMinimum);
+window.addEventListener("focus", refreshDateMinimum);
 
 function resetEventForm() {
   const form = document.querySelector("#eventForm");
@@ -148,6 +157,8 @@ document.querySelector("#eventForm").onsubmit = async (event) => {
   event.preventDefault();
 
   const form = event.target;
+  refreshDateMinimum();
+  if (!form.reportValidity()) return;
   const payload = Object.fromEntries(new FormData(form));
   const isEditing = editingEventId !== null;
 

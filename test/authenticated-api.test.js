@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { createServer } from "node:http";
 import { spawn } from "node:child_process";
 import { once } from "node:events";
+import { campusDate } from "../js/shared/event-time.js";
 
 const userID = "00000000-0000-4000-8000-000000000001";
 const event = {
@@ -202,7 +203,7 @@ test("authenticated application workflows", async (t) => {
       interests: ["save_interests", ["Technology", "Sports", "Music"]],
       launch: ["save_launch", { launch: "/home" }],
       save: ["save_event", { id: 12, saved: true }],
-      event: ["create_event", { name: "Meeting", orgID: 7 }],
+      event: ["create_event", { name: "Meeting", orgID: 7, date: campusDate() }],
       delete: ["cancel_event", { id: 12 }],
     };
     for (const [action, [rpc, payload]] of Object.entries(actions)) {
@@ -219,6 +220,19 @@ test("authenticated application workflows", async (t) => {
         },
       );
     }
+    await t.test("event creation and updates reject past and invalid dates before calling the database", async () => {
+      for (const action of ["event", "update"]) {
+        for (const date of ["2000-01-01", "2099-02-30", "invalid", undefined]) {
+          calls = [];
+          const response = await request("/api/action", {
+            action,
+            payload: { name: "Meeting", orgID: 7, date },
+          });
+          assert.equal(response.status, 400);
+          assert.ok(!calls.some((call) => call.path.includes("/rpc/")));
+        }
+      }
+    });
     await t.test(
       "profile fields and event relations survive a subsequent state load",
       async () => {
@@ -270,7 +284,7 @@ test("authenticated application workflows", async (t) => {
           scenario = { rpcError: code };
           const response = await request("/api/action", {
             action: "event",
-            payload: {},
+            payload: { date: "2099-01-01" },
           });
           assert.equal(response.status, status);
           const body = await response.json();
