@@ -51,12 +51,50 @@
         <div class="panel">
           <h2>App preferences</h2>
           <fieldset id="logoDestination" class="logo-destination">
-            <legend>When I click the Cougar Connect logo, go to:</legend>
-            <label><input type="radio" name="logoDestination" value="/" checked /> Public homepage</label>
-            <label><input type="radio" name="logoDestination" value="/home" /> My home</label>
+          <legend>When I click the Cougar Connect logo, go to:</legend>
+          <label>
+            <input type="radio" name="logoDestination" value="/" checked />
+            Public homepage
+          </label>
+          <label>
+            <input type="radio" name="logoDestination" value="/home" />
+            My home
+          </label>
           </fieldset>
           <p id="logoPreferenceStatus" role="status"></p>
         </div>
+        <section class="panel" id="appFeedbackSettings">
+          <h2>Rate Cougar Connect</h2>
+          <p>How well does Cougar Connect help you find BYU events that interest you?</p>
+
+          <form id="appFeedbackForm">
+            <fieldset class="app-rating-fieldset">
+              <legend>How satisfied are you with Cougar Connect?</legend>
+              <div class="app-rating-stars" aria-label="Rate from 1 to 5 stars">
+                <label><input type="radio" name="appRating" value="1" required><span>★</span></label>
+                <label><input type="radio" name="appRating" value="2"><span>★</span></label>
+                <label><input type="radio" name="appRating" value="3"><span>★</span></label>
+                <label><input type="radio" name="appRating" value="4"><span>★</span></label>
+                <label><input type="radio" name="appRating" value="5"><span>★</span></label>
+              </div>
+              <p class="app-rating-description">Select 1 to 5 stars</p>
+            </fieldset>
+
+            <label for="appFeedbackComment">Comments (optional)</label>
+            <textarea
+              id="appFeedbackComment"
+              rows="3"
+              maxlength="1000"
+              placeholder="Tell us about your experience finding events..."
+            ></textarea>
+
+            <button type="submit" id="submitAppFeedback">
+              Submit feedback
+            </button>
+            <p id="appFeedbackStatus" role="status"></p>
+          </form>
+        </section>
+
         <section class="panel" id="organizationAccessSettings" aria-labelledby="organizationAccessTitle" hidden>
           <h2 id="organizationAccessTitle">Organization access</h2>
           <p id="organizationAccessDescription"></p>
