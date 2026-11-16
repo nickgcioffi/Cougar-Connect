@@ -130,6 +130,84 @@ export function registerAccessRoutes(app, adminDb) {
     }
   });
 
+
+  app.get("/api/operator/events-by-admin", async (req, res, next) => {
+  try {
+    await operator(req);
+    available();
+
+    const events = [];
+    const pageSize = 1000;
+
+    for (let start = 0; ; start += pageSize) {
+      const batch = unwrap(
+        await adminDb
+          .from("Events")
+          .select("createdBy")
+          .not("createdBy", "is", null)
+          .order("eventID", { ascending: true })
+          .range(start, start + pageSize - 1)
+      );
+
+      events.push(...batch);
+      if (batch.length < pageSize) break;
+    }
+
+    const counts = new Map();
+
+    for (const event of events) {
+      counts.set(event.createdBy, (counts.get(event.createdBy) ?? 0) + 1);
+    }
+
+    const creators = [...counts.keys()];
+
+    const users = creators.length
+      ? unwrap(
+          await adminDb
+            .from("User")
+            .select("authUserID,firstName,lastName")
+            .in("authUserID", creators)
+        )
+      : [];
+
+    const eventsByAdmin = creators.map((authUserID) => {
+      const user = users.find((u) => u.authUserID === authUserID);
+
+      return {
+        adminName: user
+          ? `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim() ||
+            "Unnamed admin"
+          : "Unknown admin",
+        totalEvents: counts.get(authUserID),
+      };
+    });
+
+    eventsByAdmin.sort((a, b) => b.totalEvents - a.totalEvents);
+
+    res.json({ eventsByAdmin });
+  } catch (error) {
+    next(error);
+  }
+});
+
+  app.get("/api/operator/event-saves", async (req, res, next) => {
+  try {
+    await operator(req);
+    available();
+
+    const { count, error } = await adminDb
+      .from("UserEvents")
+      .select("eventID", { count: "exact", head: true })
+      .eq("isSaved", true);
+
+    if (error) throw error;
+
+    res.json({ totalEventSaves: count ?? 0 });
+  } catch (error) {
+    next(error);
+  }
+});
+
   app.get("/api/operator/app-reviews", async (req, res, next) => {
   try {
     await operator(req);

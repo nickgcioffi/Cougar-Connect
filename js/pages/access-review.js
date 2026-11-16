@@ -50,6 +50,10 @@ if (context) {
       const { requests, memberships } = await apiRequest("operator/access");
       const { totalReviews, averageRating, reviews } =
         await apiRequest("operator/app-reviews");
+      const { totalEventSaves } =
+        await apiRequest("operator/event-saves");
+      const { eventsByAdmin } =
+        await apiRequest("operator/events-by-admin");
       root.innerHTML = `
       <section class="operator-section" aria-labelledby="appAnalyticsTitle">
           <h2 id="appAnalyticsTitle">App Analytics</h2>
@@ -58,7 +62,23 @@ if (context) {
             <p><strong>Average app rating:</strong>
               ${averageRating === null ? "N/A" : `⭐ ${averageRating.toFixed(1)}/5`}
             </p>
+            <p><strong>Total event saves:</strong> ${totalEventSaves}</p>
 
+            <h3>Events Created per Admin</h3>
+            ${
+              eventsByAdmin.length
+                ? eventsByAdmin
+                    .map(
+                      (admin) => `
+                        <p>
+                          <strong>${escapeHtml(admin.adminName)}:</strong>
+                          ${admin.totalEvents} event(s)
+                        </p>
+                      `
+                    )
+                    .join("")
+                : "<p>No events with recorded creators yet.</p>"
+            }
             <p><strong>Total app reviews:</strong> ${totalReviews}</p>
           </div>
 
