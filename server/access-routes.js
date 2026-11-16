@@ -129,6 +129,37 @@ export function registerAccessRoutes(app, adminDb) {
       next(error);
     }
   });
+
+  app.get("/api/operator/app-reviews", async (req, res, next) => {
+  try {
+    await operator(req);
+    available();
+
+    const reviews = unwrap(
+      await adminDb
+        .from("App Reviews")
+        .select("reviewID,rating,comment,created_at")
+        .order("created_at", { ascending: false })
+    );
+
+    const totalReviews = reviews.length;
+
+    const averageRating = totalReviews
+      ? reviews.reduce(
+          (sum, review) => sum + Number(review.rating),
+          0
+        ) / totalReviews
+      : null;
+
+    res.json({
+      totalReviews,
+      averageRating,
+      reviews,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
   app.get("/api/operator/access", async (req, res, next) => {
     try {
       await operator(req);
