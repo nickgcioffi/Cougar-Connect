@@ -10,11 +10,51 @@ No installation or local server setup is required to use the hosted website. If 
 
 BYU events are scattered across campus organizations, locations, and communication channels. Students can struggle to know where to look or which opportunities are relevant to them. Cougar Connect focuses first on an upperclassman who wants to build their résumé and get involved on campus. The app brings campus events into one place, with a searchable calendar and filters for interests, event type, time, location, and hosting organization. Students create a profile and select interests to discover opportunities that fit their goals. They can save events, review event details, and add events to Google Calendar. The site also provides a request form for organization access. The app uses Supabase for profile storage and email verification.
 
+## Operator Dashboard — App Analytics
+
+The Operator Dashboard allows authorized operators to monitor application engagement and administrator activity.
+
+The dashboard includes four key metrics:
+
+- **Average App Rating:** Displays the average rating submitted by users.
+- **Total Reviews:** Shows the total number of app reviews.
+- **Total Event Saves:** Counts saved events across the application.
+- **Events Created per Admin:** Shows the number of events created by each administrator.
+
+The following API endpoints support the new metrics:
+
+- `GET /api/operator/event-saves`
+- `GET /api/operator/events-by-admin`
+
+Both endpoints require operator authorization.
+
+
+## Operator Dashboard — App Analytics
+
+The Operator Dashboard allows authorized operators to monitor application engagement and administrator activity.
+
+The dashboard includes four metrics:
+
+- **Average App Rating:** Average rating submitted by users.
+- **Total Reviews:** Total number of app reviews.
+- **Total Event Saves:** Total number of saved events across the application.
+- **Events Created per Admin:** Number of events created by each administrator.
+
+The following API endpoints require operator authorization:
+
+- `GET /api/operator/event-saves`
+- `GET /api/operator/events-by-admin`
+
+
 ## ERD
 
 ![Cougar Connect entity relationship diagram](docs/cougar-connect-erd.png)
 
 The ERD shows the current Supabase schema, including profiles, interests, events, organizations, reviews, and organization access requests.
+
+The `Events` table includes a `createdBy` column referencing `auth.users(id)`. A PostgreSQL trigger automatically records the authenticated user who creates an event. Existing events without creator information retain `NULL`.
+
+-- The `Events` table also includes a `createdBy` column referencing `auth.users(id)`. A PostgreSQL trigger automatically records the authenticated user who creates an event. Existing events without creator information retain a `NULL` value. --
 
 ## Data Flow Diagrams
 
@@ -38,6 +78,31 @@ The Supabase backend persists all information entered on the Create Profile page
 | Authentication and persistence | Supabase Auth handles registration and email verification. Supabase Postgres stores profiles, interests, and saved events. Supabase Storage handles profile photos. |
 | Events | The API combines Supabase event data with imported BYU club events from `data/byu-clubs-events.json`. |
 | Build | esbuild bundles `js/auth-client.js` into `js/vendor/supabase.js`. |
+
+### Database Migrations
+
+Database migrations are stored in the `database/` directory.
+
+Migration `012_event_creator_tracking.sql` adds event creator tracking by:
+
+- Adding the `createdBy` column to the `Events` table.
+- Creating the `set_event_creator()` PostgreSQL function.
+- Creating a trigger that automatically records the authenticated event creator.
+
+These changes have already been applied to the existing Supabase production database. The migration is included in the repository to support future database setups and should not be rerun against production unnecessarily.
+
+### Database Migrations
+
+Database migrations are stored in the `database/` directory.
+
+Migration `012_event_creator_tracking.sql` adds:
+
+- The `createdBy` column to the `Events` table.
+- The `set_event_creator()` PostgreSQL function.
+- A trigger that automatically records the authenticated event creator.
+
+These changes are already implemented in the production Supabase database. The migration documents them for future database setups.
+
 
 ## Run Locally (Optional)
 
